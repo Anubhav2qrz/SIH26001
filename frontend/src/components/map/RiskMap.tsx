@@ -374,6 +374,13 @@ export default function RiskMap({
       }
     });
 
+    m.on("click", "report-markers", (e) => {
+      if (e.features?.[0]) {
+        const coords = (e.features[0].geometry as GeoJSON.Point).coordinates;
+        onMapClick(coords[1], coords[0]);
+      }
+    });
+
     for (const layer of ["risk-circles", "alert-markers", "report-markers"]) {
       m.on("mouseenter", layer, () => {
         m.getCanvas().style.cursor = "pointer";
@@ -423,6 +430,25 @@ export default function RiskMap({
     });
 
     m.on("mouseleave", "alert-markers", () => {
+      popup.remove();
+    });
+
+    m.on("mouseenter", "report-markers", (e) => {
+      if (!e.features?.[0]) return;
+      const props = e.features[0].properties;
+      const coords = (e.features[0].geometry as GeoJSON.Point).coordinates;
+      popup
+        .setLngLat(coords as [number, number])
+        .setHTML(
+          `<div class="text-xs font-sans">
+            <div class="font-bold mb-1 text-purple-400">📋 ${props.type.replace("_", " ")}</div>
+            <div class="text-slate-300">${props.description || "Ground observation report"}</div>
+          </div>`
+        )
+        .addTo(m);
+    });
+
+    m.on("mouseleave", "report-markers", () => {
       popup.remove();
     });
 
@@ -585,6 +611,15 @@ export default function RiskMap({
       {showDetail && detailData && (
         <LocationDetail
           data={detailData}
+          activeReport={
+            selectedLocation
+              ? reports.find(
+                  (r) =>
+                    Math.abs(r.latitude - selectedLocation.lat) < 0.05 &&
+                    Math.abs(r.longitude - selectedLocation.lng) < 0.05
+                ) || null
+              : null
+          }
           onClose={() => {
             setShowDetail(false);
             setDetailData(null);

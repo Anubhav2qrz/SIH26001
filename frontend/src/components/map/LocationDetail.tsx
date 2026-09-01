@@ -11,12 +11,16 @@ import {
   Truck,
   TrendingUp,
   AlertTriangle,
+  Camera,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import type {
   RiskDetail,
   ExposureData,
   RiskForecast,
   WeatherData,
+  FieldReport,
 } from "@/lib/api";
 
 interface LocationDetailProps {
@@ -26,6 +30,7 @@ interface LocationDetailProps {
     forecast: RiskForecast;
     weather: WeatherData;
   };
+  activeReport?: FieldReport | null;
   onClose: () => void;
 }
 
@@ -72,7 +77,21 @@ function contributionBarColor(level: string) {
   }
 }
 
-export default function LocationDetail({ data, onClose }: LocationDetailProps) {
+function timeAgo(dateStr?: string) {
+  if (!dateStr) return "Just now";
+  const normalized = dateStr.endsWith("Z") || dateStr.includes("+") ? dateStr : `${dateStr}Z`;
+  const time = new Date(normalized).getTime();
+  const diff = Math.max(0, Date.now() - time);
+  const secs = Math.floor(diff / 1000);
+  if (secs < 60) return "Just now";
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+export default function LocationDetail({ data, activeReport, onClose }: LocationDetailProps) {
   const { risk, exposure, forecast, weather } = data;
 
   return (
@@ -125,6 +144,42 @@ export default function LocationDetail({ data, onClose }: LocationDetailProps) {
         </div>
 
         <div className="p-4 space-y-4">
+          {/* Ground Field Report Card if present */}
+          {activeReport && (
+            <section className="p-3.5 rounded-xl bg-orange-950/30 border border-orange-500/40 space-y-2.5 shadow-lg shadow-orange-500/5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center gap-1">
+                  <Camera className="w-3 h-3" />
+                  {activeReport.incident_type.replace("_", " ")}
+                </span>
+                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-slate-500" />
+                  {timeAgo(activeReport.timestamp)}
+                </span>
+              </div>
+              <p className="text-xs text-slate-200 leading-relaxed font-medium">
+                {activeReport.description || "Ground observation submitted via LANDGUARD mobile field kit."}
+              </p>
+              {activeReport.media_url && (
+                <div className="rounded-lg overflow-hidden border border-slate-700 h-28 w-full bg-black/40">
+                  <img
+                    src={activeReport.media_url}
+                    alt="Ground evidence"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-orange-500/20">
+                <span className="flex items-center gap-1 text-emerald-400">
+                  <CheckCircle2 className="w-3 h-3" /> Synced to Database
+                </span>
+                <span className="font-mono text-slate-400">
+                  {activeReport.latitude.toFixed(4)}°N, {activeReport.longitude.toFixed(4)}°E
+                </span>
+              </div>
+            </section>
+          )}
+
           <section>
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2.5">
               Conditions

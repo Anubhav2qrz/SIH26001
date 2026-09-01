@@ -68,7 +68,12 @@ function alertBorderClass(severity: string) {
 }
 
 function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
+  if (!dateStr) return "Just now";
+  const normalized = dateStr.endsWith("Z") || dateStr.includes("+") ? dateStr : `${dateStr}Z`;
+  const time = new Date(normalized).getTime();
+  const diff = Math.max(0, Date.now() - time);
+  const secs = Math.floor(diff / 1000);
+  if (secs < 60) return "Just now";
   const mins = Math.floor(diff / 60000);
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
