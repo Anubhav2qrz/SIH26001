@@ -20,6 +20,7 @@ import {
   Map as MapIcon,
   Menu,
   X,
+  Bot,
 } from "lucide-react";
 import {
   getDashboardKPIs as getKPIs,
@@ -36,6 +37,8 @@ import AuthModal from "@/components/auth/AuthModal";
 import FieldReportModal from "@/components/reports/FieldReportModal";
 import MultilingualAlertModal from "@/components/alerts/MultilingualAlertModal";
 import HistoricalAnalyticsView from "@/components/analytics/HistoricalAnalyticsView";
+import SitrepModal from "@/components/sitrep/SitrepModal";
+import DisasterCopilot from "@/components/copilot/DisasterCopilot";
 
 const RiskMap = dynamic(() => import("@/components/map/RiskMap"), {
   ssr: false,
@@ -132,6 +135,7 @@ export default function Dashboard() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isAlertDispatchOpen, setIsAlertDispatchOpen] = useState(false);
+  const [isSitrepOpen, setIsSitrepOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -446,13 +450,22 @@ export default function Dashboard() {
           <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
             <Zap className="w-3.5 h-3.5 text-blue-400" />
             <span className="text-xs text-blue-400 font-medium">
-              ML RISK ENGINE v1.0
+              GEMINI 1.5 + XGBOOST
             </span>
           </div>
         </div>
 
         {/* Desktop Header Actions */}
-        <div className="hidden md:flex items-center gap-2.5">
+        <div className="hidden md:flex items-center gap-2">
+          <button
+            onClick={() => setIsSitrepOpen(true)}
+            className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-blue-500/10 border border-blue-500/25 text-blue-300 hover:bg-blue-500/20 transition-all flex items-center gap-1.5"
+            title="Generate NDMA Situation Report with Gemini"
+          >
+            <Bot className="w-3.5 h-3.5 text-blue-400" />
+            <span>AI SITREP</span>
+          </button>
+
           <button
             onClick={() => setIsAnalyticsOpen(true)}
             className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-purple-500/10 border border-purple-500/25 text-purple-300 hover:bg-purple-500/20 transition-all flex items-center gap-1.5"
@@ -554,6 +567,17 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => {
+                setIsSitrepOpen(true);
+                setIsMobileMenuOpen(false);
+              }}
+              className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/25 text-blue-300 text-xs font-semibold flex items-center justify-center gap-1.5"
+            >
+              <Bot className="w-4 h-4 text-blue-400" />
+              AI SITREP
+            </button>
+
+            <button
+              onClick={() => {
                 setIsAnalyticsOpen(true);
                 setIsMobileMenuOpen(false);
               }}
@@ -562,21 +586,21 @@ export default function Dashboard() {
               <TrendingUp className="w-4 h-4" />
               Analytics
             </button>
-
-            <button
-              onClick={() => {
-                setIsDemo(!isDemo);
-                setIsMobileMenuOpen(false);
-              }}
-              className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 ${
-                isDemo
-                  ? "bg-purple-600 text-white border-purple-500"
-                  : "bg-slate-950 text-purple-400 border-slate-800"
-              }`}
-            >
-              SIH Demo {isDemo ? "ON" : "OFF"}
-            </button>
           </div>
+
+          <button
+            onClick={() => {
+              setIsDemo(!isDemo);
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-1.5 ${
+              isDemo
+                ? "bg-purple-600 text-white border-purple-500"
+                : "bg-slate-950 text-purple-400 border-slate-800"
+            }`}
+          >
+            SIH Demo Mode: {isDemo ? "ACTIVE" : "OFF"}
+          </button>
 
           {(profile.role === "AUTHORITY" || profile.role === "ADMIN") && (
             <button
@@ -699,7 +723,7 @@ export default function Dashboard() {
         })}
       </nav>
 
-      {/* Modals */}
+      {/* Modals & AI Copilot */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
       <FieldReportModal
         isOpen={isReportOpen}
@@ -714,6 +738,18 @@ export default function Dashboard() {
       <MultilingualAlertModal
         isOpen={isAlertDispatchOpen}
         onClose={() => setIsAlertDispatchOpen(false)}
+      />
+      <SitrepModal
+        isOpen={isSitrepOpen}
+        onClose={() => setIsSitrepOpen(false)}
+        kpis={kpis}
+      />
+
+      <DisasterCopilot
+        district="East Khasi Hills"
+        alertsCount={alerts.length}
+        rainfall={185}
+        highestRisk="CRITICAL"
       />
 
       {isDemo && <DemoController onDataChange={fetchData} />}

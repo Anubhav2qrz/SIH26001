@@ -11,9 +11,12 @@ import {
   WifiOff,
   RefreshCw,
   Send,
+  Sparkles,
+  Bot,
 } from "lucide-react";
 import { createReport, IncidentType, RiskLevel } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { analyzeGroundPhotoWithGemini, type VisionAnalysisResult } from "@/lib/gemini";
 
 interface FieldReportModalProps {
   isOpen: boolean;
@@ -40,8 +43,9 @@ export default function FieldReportModal({
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [analyzingAi, setAnalyzingAi] = useState(false);
+  const [aiResult, setAiResult] = useState<VisionAnalysisResult | null>(null);
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error" | "offline"; text: string } | null>(null);
-  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     if (defaultCoords) {
@@ -49,18 +53,6 @@ export default function FieldReportModal({
       setLng(defaultCoords.lng);
     }
   }, [defaultCoords]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(OFFLINE_STORAGE_KEY);
-      if (stored) {
-        try {
-          const list = JSON.parse(stored);
-          setPendingCount(list.length || 0);
-        } catch {}
-      }
-    }
-  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -90,9 +82,25 @@ export default function FieldReportModal({
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setMediaPreview(reader.result as string);
+        const base64 = reader.result as string;
+        setMediaPreview(base64);
+        triggerAiVisionAnalysis(base64, file.type);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerAiVisionAnalysis = async (base64: string, mime: string = "image/jpeg") => {
+    setAnalyzingAi(true);
+    try {
+      const res = await analyzeGroundPhotoWithGemini(base64, mime);
+      setAiResult(res);
+      setIncidentType(res.incident_type as IncidentType);
+      setSeverity(res.severity as RiskLevel);
+      setDescription((prev) => (prev ? `${prev}\n\n[Gemini Vision Assessment]: ${res.geotechnical_summary}` : res.geotechnical_summary));
+    } catch {
+    } finally {
+      setAnalyzingAi(false);
     }
   };
 
@@ -118,12 +126,12 @@ export default function FieldReportModal({
         onClose();
         setDescription("");
         setMediaPreview(null);
+        setAiResult(null);
       }, 1200);
     } catch {
       const existing = JSON.parse(localStorage.getItem(OFFLINE_STORAGE_KEY) || "[]");
       existing.push({ ...reportPayload, timestamp: new Date().toISOString() });
       localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(existing));
-      setPendingCount(existing.length);
 
       setStatusMsg({
         type: "offline",
@@ -286,26 +294,13 @@ export default function FieldReportModal({
 
           <div>
             <label className="block text-xs text-slate-400 mb-1 font-medium">
-              Observations & Immediate Threat
-            </label>
-            <textarea
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe crack length, water seepage, slope displacement, nearby road or village exposure..."
-              className="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 leading-relaxed"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-400 mb-1 font-medium">
               Ground Evidence Photo
             </label>
             <div className="flex items-center gap-3">
               <label className="flex-1 cursor-pointer flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-dashed border-slate-700 bg-slate-900/60 hover:bg-slate-850 hover:border-slate-600 transition-colors">
                 <Upload className="w-4 h-4 text-slate-400" />
                 <span className="text-xs text-slate-300 font-medium">
-                  {mediaPreview ? "Change Photo" : "Upload Photo"}
+                  {mediaPreview ? "Change Photo" : "Upload Photo (Auto-Analyzed by Gemini)"}
                 </span>
                 <input
                   type="file"
@@ -316,6 +311,31 @@ export default function FieldReportModal({
                 />
               </label>
             </div>
+
+            {analyzingAi && (
+              <div className="mt-2 p-3 rounded-xl bg-blue-950/40 border border-blue-500/30 flex items-center gap-2 text-xs text-blue-300">
+                <div className="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                <span>Google Gemini 1.5 analyzing geotechnical fractures...</span>
+              </div>
+            )}
+
+            {aiResult && !analyzingAi && (
+              <div className="mt-2.5 p-3 rounded-xl bg-purple-950/30 border border-purple-500/40 space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-purple-300 flex items-center gap-1.5">
+                    <Bot className="w-3.5 h-3.5 text-purple-400" />
+                    Gemini Vision Analysis
+                  </span>
+                  <span className="text-[10px] bg-purple-500/20 text-purple-300 font-bold px-2 py-0.5 rounded-full border border-purple-500/30">
+                    Hazard Score: {aiResult.hazard_score}/100
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  {aiResult.geotechnical_summary}
+                </p>
+              </div>
+            )}
+
             {mediaPreview && (
               <div className="mt-2.5 relative rounded-xl overflow-hidden border border-slate-700 w-full h-32 bg-black/40">
                 <img
@@ -325,13 +345,29 @@ export default function FieldReportModal({
                 />
                 <button
                   type="button"
-                  onClick={() => setMediaPreview(null)}
+                  onClick={() => {
+                    setMediaPreview(null);
+                    setAiResult(null);
+                  }}
                   className="absolute top-2 right-2 p-1 rounded-lg bg-black/70 text-white hover:bg-red-600 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
+          </div>
+
+          <div>
+            <label className="block text-xs text-slate-400 mb-1 font-medium">
+              Observations & Immediate Threat
+            </label>
+            <textarea
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe crack length, water seepage, slope displacement, nearby road or village exposure..."
+              className="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 leading-relaxed"
+            />
           </div>
 
           <button
