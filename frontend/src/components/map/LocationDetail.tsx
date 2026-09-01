@@ -95,8 +95,9 @@ export default function LocationDetail({ data, activeReport, onClose }: Location
   const { risk, exposure, forecast, weather } = data;
 
   return (
-    <div className="absolute top-0 right-0 h-full w-[380px] z-30 animate-slide-in-right">
-      <div className="h-full bg-[#0d1320]/95 backdrop-blur-xl border-l border-gray-800/60 overflow-y-auto">
+    <div className="absolute inset-x-0 bottom-0 max-h-[80vh] sm:max-h-full sm:top-0 sm:bottom-auto sm:right-0 sm:left-auto sm:h-full w-full sm:w-[380px] z-30 animate-slide-in-right">
+      <div className="h-full bg-[#0d1320]/95 backdrop-blur-xl border-t sm:border-t-0 sm:border-l border-gray-800/60 overflow-y-auto rounded-t-2xl sm:rounded-none shadow-2xl">
+        <div className="w-12 h-1 bg-slate-700/80 rounded-full mx-auto my-2 sm:hidden" />
         <div className="sticky top-0 z-10 bg-[#0d1320]/95 backdrop-blur-xl border-b border-gray-800/60 p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">

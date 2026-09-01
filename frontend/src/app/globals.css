@@ -243,16 +243,26 @@ body {
 
 .demo-controller {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 70px;
+  right: 12px;
+  max-width: calc(100vw - 24px);
   z-index: 1000;
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(139, 92, 246, 0.3);
   border-radius: 16px;
-  padding: 16px 20px;
-  min-width: 320px;
+  padding: 12px 14px;
+  min-width: 260px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 640px) {
+  .demo-controller {
+    bottom: 20px;
+    right: 20px;
+    padding: 16px 20px;
+    min-width: 320px;
+  }
 }
 
 .recharts-cartesian-grid-horizontal line,

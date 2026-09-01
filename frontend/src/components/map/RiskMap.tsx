@@ -577,11 +577,11 @@ export default function RiskMap({
         </button>
       </div>
 
-      <div className="absolute bottom-6 left-4 glass-card-static px-4 py-3 z-10">
-        <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-2 font-bold flex items-center gap-1.5">
+      <div className="absolute bottom-16 sm:bottom-6 left-3 sm:left-4 glass-card-static px-3 sm:px-4 py-2 sm:py-3 z-10 max-w-[calc(100vw-24px)] overflow-x-auto shadow-xl">
+        <p className="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-wider mb-1.5 font-bold flex items-center gap-1.5 shrink-0">
           <Eye className="w-3 h-3 text-blue-400" /> Landslide Hazard Scale
         </p>
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
           {[
             { label: "Low (0-25%)", color: "#22c55e" },
             { label: "Moderate (26-50%)", color: "#f59e0b" },
