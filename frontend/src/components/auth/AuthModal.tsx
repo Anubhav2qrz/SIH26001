@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Shield, User, Lock, Mail, Check, AlertCircle, Sparkles } from "lucide-react";
+import { X, Shield, User, Lock, Mail, Check, AlertCircle } from "lucide-react";
 import { useAuth, AppRole } from "@/context/AuthContext";
 
 interface AuthModalProps {
@@ -135,8 +135,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                   Select User Persona
                 </span>
-                <span className="text-[10px] text-blue-400 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> One-Click
+                <span className="text-[10px] text-blue-400 font-medium">
+                  One-Click
                 </span>
               </div>
 
