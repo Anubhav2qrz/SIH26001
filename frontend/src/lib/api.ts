@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 export type RiskLevel = "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
 export type AlertSeverity = "GREEN" | "YELLOW" | "ORANGE" | "RED";
