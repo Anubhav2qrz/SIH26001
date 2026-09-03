@@ -25,6 +25,13 @@ export const metadata: Metadata = {
     "AI",
     "disaster management",
   ],
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 import { AuthProvider } from "@/context/AuthContext";

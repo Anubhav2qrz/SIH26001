@@ -1,0 +1,171 @@
+const fs = require('fs');
+const path = require('path');
+const sharp = require('sharp');
+
+// Create the LandGuard SVG favicon
+const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b132b" />
+      <stop offset="50%" stop-color="#0d1b38" />
+      <stop offset="100%" stop-color="#070c18" />
+    </linearGradient>
+
+    <!-- Border Gradient -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#2563eb" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0.4" />
+    </linearGradient>
+
+    <!-- Mountain Left Facet -->
+    <linearGradient id="mntLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7dd3fc" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Mountain Right Facet -->
+    <linearGradient id="mntRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <!-- Secondary Peak -->
+    <linearGradient id="subMnt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0c4a6e" />
+    </linearGradient>
+
+    <!-- Warning Glow -->
+    <linearGradient id="warnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#38bdf8" flood-opacity="0.5" />
+    </filter>
+
+    <filter id="beaconGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#f59e0b" flood-opacity="0.8" />
+    </filter>
+  </defs>
+
+  <!-- Base Badge Squircle -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="2.5" />
+
+  <!-- Protective Outer Shield Accent subtle watermark -->
+  <path d="M 32 9 L 48 15 C 48 33 39 46 32 52 C 25 46 16 33 16 15 Z"
+        fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-opacity="0.25" stroke-dasharray="2 2" />
+
+  <!-- Early Warning / Radar Sensor Arcs -->
+  <path d="M 21 16 A 12 12 0 0 1 43 16" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" opacity="0.85" filter="url(#glow)" />
+  <path d="M 25 20 A 7.5 7.5 0 0 1 39 20" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" opacity="0.9" />
+
+  <!-- Terrain / Secondary Mountain Peak (Right) -->
+  <polygon points="41,31 54,49 28,49" fill="#1e293b" opacity="0.9" />
+  <polygon points="41,31 54,49 41,49" fill="#0f172a" opacity="0.7" />
+
+  <!-- Terrain / Secondary Mountain Peak (Left) -->
+  <polygon points="21,32 9,49 33,49" fill="url(#subMnt)" opacity="0.9" />
+
+  <!-- Primary Center Mountain Peak -->
+  <!-- Left illuminated slope -->
+  <polygon points="32,23 15,49 32,49" fill="url(#mntLeft)" />
+  <!-- Right shadow slope -->
+  <polygon points="32,23 32,49 49,49" fill="url(#mntRight)" />
+
+  <!-- Crest Ridge Highlight -->
+  <line x1="32" y1="23" x2="32" y2="49" stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round" opacity="0.9" />
+
+  <!-- Early Warning Telemetry Pulse Beacon Dot at Peak -->
+  <circle cx="32" cy="23" r="3" fill="#f59e0b" filter="url(#beaconGlow)" />
+  <circle cx="32" cy="23" r="1.5" fill="#fef08a" />
+
+  <!-- Lower Protective Shield Guard Arc -->
+  <path d="M 14 36 C 14 47 24 53 32 56 C 40 53 50 47 50 36"
+        fill="none" stroke="#38bdf8" stroke-width="2.6" stroke-linecap="round" filter="url(#glow)" />
+
+  <!-- Seismic / Early Warning Telemetry Line on Shield -->
+  <path d="M 21 44 L 27 44 L 29.5 40 L 32 47 L 34.5 41 L 37 44 L 43 44"
+        fill="none" stroke="url(#warnGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
+`;
+
+async function main() {
+  const scriptsDir = __dirname;
+  const projectFrontend = path.resolve(scriptsDir, '..');
+  const appDir = path.join(projectFrontend, 'src', 'app');
+  const publicDir = path.join(projectFrontend, 'public');
+
+  // Save SVG to icon.svg and public/icon.svg
+  fs.writeFileSync(path.join(appDir, 'icon.svg'), svgContent, 'utf8');
+  fs.writeFileSync(path.join(publicDir, 'icon.svg'), svgContent, 'utf8');
+  console.log('Written icon.svg to app/ and public/');
+
+  // Generate PNG buffers for 16, 32, 48, 180, 192, 512
+  const svgBuffer = Buffer.from(svgContent);
+
+  const png16 = await sharp(svgBuffer).resize(16, 16).png().toBuffer();
+  const png32 = await sharp(svgBuffer).resize(32, 32).png().toBuffer();
+  const png48 = await sharp(svgBuffer).resize(48, 48).png().toBuffer();
+  const png180 = await sharp(svgBuffer).resize(180, 180).png().toBuffer();
+  const png192 = await sharp(svgBuffer).resize(192, 192).png().toBuffer();
+
+  // Save apple-icon.png (180x180)
+  fs.writeFileSync(path.join(appDir, 'apple-icon.png'), png180);
+  fs.writeFileSync(path.join(publicDir, 'apple-touch-icon.png'), png180);
+
+  // Helper to build a multi-image ICO file from PNG buffers
+  function createIco(images) {
+    const headerSize = 6;
+    const dirEntrySize = 16;
+    const numImages = images.length;
+    const dirSize = numImages * dirEntrySize;
+    let currentOffset = headerSize + dirSize;
+
+    const header = Buffer.alloc(headerSize);
+    header.writeUInt16LE(0, 0); // Reserved
+    header.writeUInt16LE(1, 2); // Type 1 = ICO
+    header.writeUInt16LE(numImages, 4); // Number of images
+
+    const entries = [];
+    for (const img of images) {
+      const entry = Buffer.alloc(dirEntrySize);
+      entry.writeUInt8(img.width >= 256 ? 0 : img.width, 0);
+      entry.writeUInt8(img.height >= 256 ? 0 : img.height, 1);
+      entry.writeUInt8(0, 2); // Colors (0 = >= 8bpp)
+      entry.writeUInt8(0, 3); // Reserved
+      entry.writeUInt16LE(1, 4); // Color planes
+      entry.writeUInt16LE(32, 6); // Bits per pixel
+      entry.writeUInt32LE(img.buffer.length, 8); // Image data length
+      entry.writeUInt32LE(currentOffset, 12); // Offset of image data
+
+      entries.push(entry);
+      currentOffset += img.buffer.length;
+    }
+
+    return Buffer.concat([
+      header,
+      ...entries,
+      ...images.map(img => img.buffer)
+    ]);
+  }
+
+  const icoBuffer = createIco([
+    { width: 16, height: 16, buffer: png16 },
+    { width: 32, height: 32, buffer: png32 },
+    { width: 48, height: 48, buffer: png48 }
+  ]);
+
+  fs.writeFileSync(path.join(appDir, 'favicon.ico'), icoBuffer);
+  fs.writeFileSync(path.join(publicDir, 'favicon.ico'), icoBuffer);
+  console.log('Successfully generated favicon.ico (16x16, 32x32, 48x48) and apple-icon.png');
+}
+
+main().catch(err => {
+  console.error('Error generating icons:', err);
+  process.exit(1);
+});

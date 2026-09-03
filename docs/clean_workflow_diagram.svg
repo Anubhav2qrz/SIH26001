@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420" style="background:#0b1329; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Card Gradients -->
+    <linearGradient id="card1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0.2" />
+    </linearGradient>
+    <linearGradient id="card2Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0.2" />
+    </linearGradient>
+    <linearGradient id="card3Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.2" />
+    </linearGradient>
+    <linearGradient id="card4Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0.2" />
+    </linearGradient>
+
+    <!-- Arrow Marker -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#38bdf8" />
+    </marker>
+  </defs>
+
+  <!-- Title Header -->
+  <text x="600" y="52" text-anchor="middle" fill="#ffffff" font-size="24" font-weight="800" letter-spacing="1">
+    LANDGUARD NER — SYSTEM WORKFLOW
+  </text>
+  <text x="600" y="80" text-anchor="middle" fill="#94a3b8" font-size="14" font-weight="500">
+    AI-Powered Real-Time Landslide Risk Monitoring &amp; Early Warning Architecture
+  </text>
+
+  <!-- Flow Arrows connecting the 4 cards -->
+  <path d="M 285 240 L 325 240" stroke="#38bdf8" stroke-width="3" fill="none" marker-end="url(#arrowhead)" />
+  <path d="M 575 240 L 615 240" stroke="#38bdf8" stroke-width="3" fill="none" marker-end="url(#arrowhead)" />
+  <path d="M 865 240 L 905 240" stroke="#38bdf8" stroke-width="3" fill="none" marker-end="url(#arrowhead)" />
+
+  <!-- CARD 1: DATA COLLECTION -->
+  <g transform="translate(45, 120)">
+    <rect width="240" height="240" rx="16" fill="url(#card1Grad)" stroke="#38bdf8" stroke-width="2" />
+    <rect x="16" y="16" width="36" height="36" rx="8" fill="#0284c7" fill-opacity="0.25" stroke="#38bdf8" stroke-width="1.2" />
+    <text x="34" y="40" text-anchor="middle" fill="#38bdf8" font-size="16" font-weight="800">1</text>
+    <text x="62" y="38" fill="#38bdf8" font-size="11" font-weight="700" letter-spacing="0.5">INPUTS</text>
+    <text x="16" y="80" fill="#ffffff" font-size="16" font-weight="700">Data Collection</text>
+    <text x="16" y="112" fill="#cbd5e1" font-size="13">• Live Weather &amp; IMD</text>
+    <text x="16" y="138" fill="#cbd5e1" font-size="13">• IoT Soil Moisture</text>
+    <text x="16" y="164" fill="#cbd5e1" font-size="13">• DEM Terrain Slopes</text>
+    <text x="16" y="190" fill="#cbd5e1" font-size="13">• Citizen Field Reports</text>
+    <text x="16" y="216" fill="#64748b" font-size="11">Real-time Telemetry Feeds</text>
+  </g>
+
+  <!-- CARD 2: AI RISK ENGINE -->
+  <g transform="translate(335, 120)">
+    <rect width="240" height="240" rx="16" fill="url(#card2Grad)" stroke="#818cf8" stroke-width="2" />
+    <rect x="16" y="16" width="36" height="36" rx="8" fill="#4f46e5" fill-opacity="0.25" stroke="#818cf8" stroke-width="1.2" />
+    <text x="34" y="40" text-anchor="middle" fill="#818cf8" font-size="16" font-weight="800">2</text>
+    <text x="62" y="38" fill="#818cf8" font-size="11" font-weight="700" letter-spacing="0.5">ANALYTICS</text>
+    <text x="16" y="80" fill="#ffffff" font-size="16" font-weight="700">AI Risk Engine</text>
+    <text x="16" y="112" fill="#cbd5e1" font-size="13">• Soil Saturation Index</text>
+    <text x="16" y="138" fill="#cbd5e1" font-size="13">• XGBoost Hazard Model</text>
+    <text x="16" y="164" fill="#cbd5e1" font-size="13">• SHAP Explainability</text>
+    <text x="16" y="190" fill="#cbd5e1" font-size="13">• Dynamic Risk Score</text>
+    <text x="16" y="216" fill="#64748b" font-size="11">0.0 – 1.0 Susceptibility</text>
+  </g>
+
+  <!-- CARD 3: LIVE DASHBOARD -->
+  <g transform="translate(625, 120)">
+    <rect width="240" height="240" rx="16" fill="url(#card3Grad)" stroke="#34d399" stroke-width="2" />
+    <rect x="16" y="16" width="36" height="36" rx="8" fill="#059669" fill-opacity="0.25" stroke="#34d399" stroke-width="1.2" />
+    <text x="34" y="40" text-anchor="middle" fill="#34d399" font-size="16" font-weight="800">3</text>
+    <text x="62" y="38" fill="#34d399" font-size="11" font-weight="700" letter-spacing="0.5">SPATIAL GIS</text>
+    <text x="16" y="80" fill="#ffffff" font-size="16" font-weight="700">Live Dashboard</text>
+    <text x="16" y="112" fill="#cbd5e1" font-size="13">• 3D Dynamic Risk Map</text>
+    <text x="16" y="138" fill="#cbd5e1" font-size="13">• Exposed Road Networks</text>
+    <text x="16" y="164" fill="#cbd5e1" font-size="13">• Vulnerable Towns</text>
+    <text x="16" y="190" fill="#cbd5e1" font-size="13">• Priority Rank Scoring</text>
+    <text x="16" y="216" fill="#64748b" font-size="11">MapLibre GL Vector Grids</text>
+  </g>
+
+  <!-- CARD 4: EMERGENCY ACTION -->
+  <g transform="translate(915, 120)">
+    <rect width="240" height="240" rx="16" fill="url(#card4Grad)" stroke="#f87171" stroke-width="2" />
+    <rect x="16" y="16" width="36" height="36" rx="8" fill="#dc2626" fill-opacity="0.25" stroke="#f87171" stroke-width="1.2" />
+    <text x="34" y="40" text-anchor="middle" fill="#f87171" font-size="16" font-weight="800">4</text>
+    <text x="62" y="38" fill="#f87171" font-size="11" font-weight="700" letter-spacing="0.5">DISPATCH</text>
+    <text x="16" y="80" fill="#ffffff" font-size="16" font-weight="700">Emergency Action</text>
+    <text x="16" y="112" fill="#cbd5e1" font-size="13">• Multilingual Warnings</text>
+    <text x="16" y="138" fill="#cbd5e1" font-size="13">• Khasi / Assamese / Hindi</text>
+    <text x="16" y="164" fill="#cbd5e1" font-size="13">• Automated SITREP PDF</text>
+    <text x="16" y="190" fill="#cbd5e1" font-size="13">• AI Copilot Evacuation</text>
+    <text x="16" y="216" fill="#64748b" font-size="11">SMS, WhatsApp &amp; Sirens</text>
+  </g>
+
+  <!-- Footer Tag -->
+  <text x="600" y="392" text-anchor="middle" fill="#475569" font-size="12">
+    SMART INDIA HACKATHON 2026 · PROBLEM STATEMENT SIH26001 · DISASTER MANAGEMENT DOMAIN
+  </text>
+</svg>
