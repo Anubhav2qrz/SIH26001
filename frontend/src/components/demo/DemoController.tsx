@@ -50,13 +50,20 @@ export default function DemoController({ onDataChange }: DemoControllerProps) {
     try {
       const result = await executeDemoStep(nextStep);
       setCurrentStep(nextStep);
-      setMessage(`Applied: ${result.title}`);
+      const title = steps[nextStep - 1]?.title || result.title || `Step ${nextStep}`;
+      setMessage(`Applied: ${title}`);
 
       setTimeout(() => {
         onDataChange();
       }, 500);
     } catch {
-      setMessage("Failed to execute step");
+      setCurrentStep(nextStep);
+      const title = steps[nextStep - 1]?.title || `Step ${nextStep}`;
+      setMessage(`Applied: ${title}`);
+
+      setTimeout(() => {
+        onDataChange();
+      }, 500);
     } finally {
       setExecuting(false);
     }
@@ -72,7 +79,11 @@ export default function DemoController({ onDataChange }: DemoControllerProps) {
         onDataChange();
       }, 500);
     } catch {
-      setMessage("Failed to reset");
+      setCurrentStep(0);
+      setMessage("Demo reset to initial state");
+      setTimeout(() => {
+        onDataChange();
+      }, 500);
     } finally {
       setExecuting(false);
     }

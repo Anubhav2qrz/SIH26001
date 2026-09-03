@@ -3,11 +3,46 @@ import { store } from "@/lib/serverStore";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ lat: string; lng: string }> }
+  context?: { params?: Promise<{ lat: string; lng: string }> | { lat: string; lng: string } }
 ) {
-  const { lat, lng } = await params;
-  const latitude = parseFloat(lat);
-  const longitude = parseFloat(lng);
+  let latitude = 25.27;
+  let longitude = 91.72;
+
+  try {
+    let latStr = "";
+    let lngStr = "";
+
+    if (context?.params) {
+      try {
+        const p = await context.params;
+        latStr = p?.lat || "";
+        lngStr = p?.lng || "";
+      } catch {}
+    }
+
+    if (!latStr || !lngStr) {
+      try {
+        const url = new URL(request.url);
+        latStr = url.searchParams.get("lat") || "";
+        lngStr = url.searchParams.get("lng") || "";
+
+        if (!latStr || !lngStr) {
+          const segments = url.pathname.split("/").filter(Boolean);
+          const fIdx = segments.indexOf("forecast");
+          if (fIdx !== -1 && segments.length >= fIdx + 3) {
+            latStr = segments[fIdx + 1];
+            lngStr = segments[fIdx + 2];
+          } else if (segments.length >= 2) {
+            latStr = segments[segments.length - 2];
+            lngStr = segments[segments.length - 1];
+          }
+        }
+      } catch {}
+    }
+
+    latitude = parseFloat(latStr) || 25.27;
+    longitude = parseFloat(lngStr) || 91.72;
+  } catch {}
 
   const baseRisk = store.computeRiskForCoord(latitude, longitude);
   const baseProb = baseRisk.probability;
