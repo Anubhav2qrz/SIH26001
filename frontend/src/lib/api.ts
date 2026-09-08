@@ -216,6 +216,7 @@ export const createReport = (report: {
   description?: string;
   severity?: RiskLevel;
   district?: string;
+  media_url?: string;
 }) =>
   fetchAPI<FieldReport>("/api/reports", {
     method: "POST",

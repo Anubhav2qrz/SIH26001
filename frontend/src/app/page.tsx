@@ -666,6 +666,10 @@ export default function Dashboard() {
               selectedLocation={selectedLocation}
               onMapClick={handleMapClick}
               onRefresh={fetchData}
+              onAddIncident={(coords) => {
+                if (coords) setSelectedLocation(coords);
+                setIsReportOpen(true);
+              }}
             />
           )}
         </main>

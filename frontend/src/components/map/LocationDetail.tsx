@@ -31,6 +31,7 @@ interface LocationDetailProps {
     weather: WeatherData;
   };
   activeReport?: FieldReport | null;
+  onReportIncident?: (coords: { lat: number; lng: number }) => void;
   onClose: () => void;
 }
 
@@ -91,7 +92,7 @@ function timeAgo(dateStr?: string) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-export default function LocationDetail({ data, activeReport, onClose }: LocationDetailProps) {
+export default function LocationDetail({ data, activeReport, onReportIncident, onClose }: LocationDetailProps) {
   const { risk, exposure, forecast, weather } = data;
 
   return (
@@ -114,7 +115,7 @@ export default function LocationDetail({ data, activeReport, onClose }: Location
             </button>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 mb-3">
             <div className="flex-1">
               <p className="text-xs text-gray-500 mb-1">
                 {risk.district || `${risk.latitude.toFixed(4)}°N, ${risk.longitude.toFixed(4)}°E`}
@@ -142,6 +143,16 @@ export default function LocationDetail({ data, activeReport, onClose }: Location
               </p>
             </div>
           </div>
+
+          {onReportIncident && (
+            <button
+              onClick={() => onReportIncident({ lat: risk.latitude, lng: risk.longitude })}
+              className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2 border border-orange-400/30 group"
+            >
+              <Camera className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+              <span>Report Live Incident Here</span>
+            </button>
+          )}
         </div>
 
         <div className="p-4 space-y-4">

@@ -17,7 +17,7 @@ import {
   type WeatherData,
 } from "@/lib/api";
 import LocationDetail from "./LocationDetail";
-import { Crosshair, RotateCcw, ZoomIn, ZoomOut, Layers, Eye } from "lucide-react";
+import { Crosshair, RotateCcw, ZoomIn, ZoomOut, Layers, Eye, MapPin, Camera } from "lucide-react";
 
 interface RiskMapProps {
   riskGrid: RiskGridCell[];
@@ -26,6 +26,7 @@ interface RiskMapProps {
   selectedLocation: { lat: number; lng: number } | null;
   onMapClick: (lat: number, lng: number) => void;
   onRefresh: () => void;
+  onAddIncident?: (coords?: { lat: number; lng: number }) => void;
 }
 
 type BasemapStyle = "dark" | "satellite" | "topo";
@@ -53,12 +54,15 @@ export default function RiskMap({
   selectedLocation,
   onMapClick,
   onRefresh,
+  onAddIncident,
 }: RiskMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [currentBasemap, setCurrentBasemap] = useState<BasemapStyle>("dark");
   const [showBasemapMenu, setShowBasemapMenu] = useState(false);
+  const [isPinMode, setIsPinMode] = useState(false);
+  const isPinModeRef = useRef(false);
   const [detailData, setDetailData] = useState<{
     risk: RiskDetail;
     exposure: ExposureData;
@@ -68,6 +72,13 @@ export default function RiskMap({
   const [showDetail, setShowDetail] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [showGsiLayer, setShowGsiLayer] = useState(true);
+
+  useEffect(() => {
+    isPinModeRef.current = isPinMode;
+    if (map.current) {
+      map.current.getCanvas().style.cursor = isPinMode ? "crosshair" : "";
+    }
+  }, [isPinMode]);
 
   const toggleGsiLayer = () => {
     if (!map.current) return;
@@ -349,6 +360,9 @@ export default function RiskMap({
           severity: r.severity,
           description: r.description || "",
           id: r.id,
+          media_url: r.media_url || "",
+          timestamp: r.timestamp || "",
+          district: r.district || "",
         },
       })),
     };
@@ -359,14 +373,33 @@ export default function RiskMap({
       m.addSource("reports", { type: "geojson", data: reportGeoJSON });
 
       m.addLayer({
+        id: "report-pulse",
+        type: "circle",
+        source: "reports",
+        paint: {
+          "circle-radius": 18,
+          "circle-color": "rgba(168, 85, 247, 0.22)",
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "rgba(168, 85, 247, 0.6)",
+        },
+      });
+
+      m.addLayer({
         id: "report-markers",
         type: "circle",
         source: "reports",
         paint: {
-          "circle-radius": 8,
-          "circle-color": "#8b5cf6",
-          "circle-opacity": 0.9,
-          "circle-stroke-width": 2,
+          "circle-radius": 8.5,
+          "circle-color": [
+            "match",
+            ["get", "severity"],
+            "CRITICAL", "#ef4444",
+            "HIGH", "#f97316",
+            "MODERATE", "#a855f7",
+            "#8b5cf6"
+          ],
+          "circle-opacity": 0.95,
+          "circle-stroke-width": 2.5,
           "circle-stroke-color": "#ffffff",
         },
       });
@@ -609,14 +642,23 @@ export default function RiskMap({
 
     m.on("mouseenter", "report-markers", (e) => {
       if (!e.features?.[0]) return;
-      const props = e.features[0].properties;
+      const props = e.features[0].properties || {};
       const coords = (e.features[0].geometry as GeoJSON.Point).coordinates;
+      const mediaHtml = props.media_url ? `<div style="margin-top: 6px; border-radius: 6px; overflow: hidden; height: 75px; width: 100%; border: 1px solid rgba(168,85,247,0.3);"><img src="${props.media_url}" style="width: 100%; height: 100%; object-fit: cover;" /></div>` : "";
       popup
         .setLngLat(coords as [number, number])
         .setHTML(
-          `<div class="text-xs font-sans">
-            <div class="font-bold mb-1 text-purple-400">📋 ${props.type.replace("_", " ")}</div>
-            <div class="text-slate-300">${props.description || "Ground observation report"}</div>
+          `<div style="font-family: sans-serif; font-size: 11px; max-width: 220px; line-height: 1.4;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 8px;">
+              <span style="font-weight: 700; color: #a855f7;">📍 ${props.type?.replace("_", " ")}</span>
+              <span style="font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 4px; background: rgba(168,85,247,0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.4);">${props.severity || "INCIDENT"}</span>
+            </div>
+            <div style="color: #334155; font-size: 11px; margin-bottom: 4px;">${props.description || "Ground observation report"}</div>
+            ${mediaHtml}
+            <div style="margin-top: 6px; padding-top: 4px; border-top: 1px dashed #cbd5e1; font-size: 9px; color: #64748b; display: flex; justify-content: space-between;">
+              <span>${props.district || "Live Report"}</span>
+              <span style="color: #7c3aed; font-weight: 600;">Click to inspect</span>
+            </div>
           </div>`
         )
         .addTo(m);
@@ -627,6 +669,17 @@ export default function RiskMap({
     });
 
     m.on("click", (e) => {
+      if (isPinModeRef.current) {
+        const coords = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+        setIsPinMode(false);
+        if (onAddIncident) {
+          onAddIncident(coords);
+        } else {
+          onMapClick(coords.lat, coords.lng);
+        }
+        return;
+      }
+
       const features = m.queryRenderedFeatures(e.point, {
         layers: ["risk-circles", "alert-markers", "report-markers", "gsi-points", "gsi-clusters"],
       });
@@ -634,7 +687,7 @@ export default function RiskMap({
         onMapClick(e.lngLat.lat, e.lngLat.lng);
       }
     });
-  }, [mapLoaded, riskGrid, alerts, reports, onMapClick]);
+  }, [mapLoaded, riskGrid, alerts, reports, onMapClick, onAddIncident]);
 
   useEffect(() => {
     if (!selectedLocation) return;
@@ -741,6 +794,19 @@ export default function RiskMap({
         </div>
 
         <button
+          onClick={() => setIsPinMode(!isPinMode)}
+          className={`h-9 px-3 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-all shadow-lg ${
+            isPinMode
+              ? "bg-gradient-to-r from-orange-600 to-amber-600 text-white border-orange-400 ring-2 ring-orange-500/50 animate-pulse"
+              : "bg-slate-900/90 backdrop-blur border-slate-700/80 hover:bg-slate-800 text-orange-400 hover:text-orange-300"
+          }`}
+          title="Pin Live Incident on Map"
+        >
+          <Camera className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">{isPinMode ? "Click Map to Pin" : "Pin Incident"}</span>
+        </button>
+
+        <button
           onClick={() => map.current?.zoomIn()}
           className="w-9 h-9 rounded-xl bg-slate-900/90 backdrop-blur border border-slate-700/80 flex items-center justify-center hover:bg-slate-800 text-slate-300 transition-colors"
           title="Zoom In"
@@ -770,6 +836,21 @@ export default function RiskMap({
         </button>
       </div>
 
+      {isPinMode && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 animate-bounce">
+          <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 text-white px-4 py-2 rounded-full shadow-2xl border border-orange-300/60 flex items-center gap-3 text-xs font-bold">
+            <MapPin className="w-4 h-4 animate-pulse text-amber-200" />
+            <span>Click anywhere on the map to pin a live incident</span>
+            <button
+              onClick={() => setIsPinMode(false)}
+              className="bg-black/30 hover:bg-black/50 text-white rounded-full px-2 py-0.5 text-[11px] font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="absolute bottom-16 sm:bottom-6 left-3 sm:left-4 glass-card-static px-3 sm:px-4 py-2 sm:py-3 z-10 max-w-[calc(100vw-24px)] overflow-x-auto shadow-xl">
         <p className="text-[9px] sm:text-[10px] text-slate-400 uppercase tracking-wider mb-1.5 font-bold flex items-center gap-1.5 shrink-0">
           <Eye className="w-3 h-3 text-blue-400" /> Landslide Hazard Scale
@@ -791,7 +872,11 @@ export default function RiskMap({
           ))}
           <div className="flex items-center gap-1.5 pl-2 sm:pl-3 border-l border-slate-700">
             <div className="w-2.5 h-2.5 rounded-full bg-purple-500 ring-2 ring-purple-400/30" />
-            <span className="text-[10px] text-purple-300 font-semibold">GSI Recorded Landslides</span>
+            <span className="text-[10px] text-purple-300 font-semibold">GSI Historical (8.5k)</span>
+          </div>
+          <div className="flex items-center gap-1.5 pl-2 sm:pl-3 border-l border-slate-700">
+            <div className="w-2.5 h-2.5 rounded-full bg-violet-400 ring-2 ring-violet-400/50 animate-pulse" />
+            <span className="text-[10px] text-violet-300 font-semibold">Live Field Incidents ({reports.length})</span>
           </div>
         </div>
       </div>
@@ -817,6 +902,7 @@ export default function RiskMap({
                 ) || null
               : null
           }
+          onReportIncident={onAddIncident}
           onClose={() => {
             setShowDetail(false);
             setDetailData(null);

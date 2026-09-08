@@ -171,13 +171,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null };
     }
 
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: typeof window !== "undefined" ? `${window.location.origin}/` : undefined,
       },
     });
-    return { error: error ? new Error(error.message) : null };
+
+    if (error) {
+      return { error: new Error(error.message) };
+    }
+
+    if (data?.url && typeof window !== "undefined") {
+      window.location.href = data.url;
+    }
+
+    return { error: null };
   };
 
   const signOut = async () => {

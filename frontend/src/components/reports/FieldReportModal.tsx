@@ -116,6 +116,7 @@ export default function FieldReportModal({
       severity,
       description: description || `Field observation by ${profile.name}`,
       district,
+      media_url: mediaPreview || undefined,
     };
 
     try {
