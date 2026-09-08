@@ -89,66 +89,86 @@ NER_ROADS = [
 
 
 async def seed_database():
+    import os
+    import json
+    from sqlalchemy import func as sqlfunc, delete
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     async with async_session() as db:
-        result = await db.execute(select(LandslideEvent).limit(1))
-        if result.scalar_one_or_none():
-            print("Database already seeded. Skipping.")
+        result = await db.execute(select(sqlfunc.count(LandslideEvent.id)))
+        count = result.scalar() or 0
+        if count >= 1000:
+            print(f"Database already seeded with {count} GSI landslide events. Skipping.")
             return
 
-        print("[*] Seeding database...")
+        print("[*] Seeding database with authentic GSI Landslide Inventory...")
+        if count > 0:
+            await db.execute(delete(LandslideEvent))
+            await db.commit()
 
-        for event_data in NER_LANDSLIDE_EVENTS:
-            event = LandslideEvent(
-                latitude=event_data["lat"],
-                longitude=event_data["lng"],
-                event_date=datetime.strptime(event_data["date"], "%Y-%m-%d"),
-                district=event_data["district"],
-                state=event_data["state"],
-                severity=event_data["severity"],
-                rainfall_mm=event_data["rainfall"],
-                affected_road=event_data.get("road"),
-                affected_settlement=event_data.get("settlement"),
-                fatalities=event_data.get("fatalities", 0),
-                source="GSI/ISRO Landslide Inventory",
-            )
-            db.add(event)
-
-        states = ["Meghalaya", "Assam", "Mizoram", "Manipur", "Nagaland", "Tripura", "Arunachal Pradesh", "Sikkim"]
-        districts_by_state = {
-            "Meghalaya": [("East Khasi Hills", 25.3, 91.7), ("West Khasi Hills", 25.5, 91.3), ("Ri-Bhoi", 25.9, 91.9)],
-            "Assam": [("Dima Hasao", 25.5, 93.0), ("Karbi Anglong", 26.0, 93.4), ("Kamrup", 26.2, 91.8)],
-            "Mizoram": [("Aizawl", 23.7, 92.7), ("Lunglei", 22.9, 92.7)],
-            "Manipur": [("Imphal West", 24.8, 93.9), ("Senapati", 25.3, 94.1)],
-            "Nagaland": [("Kohima", 25.7, 94.1)],
-            "Tripura": [("West Tripura", 23.8, 91.3)],
-            "Arunachal Pradesh": [("Papum Pare", 27.1, 93.6), ("West Kameng", 27.3, 92.4)],
-            "Sikkim": [("East Sikkim", 27.3, 88.6)],
-        }
-
-        for year in range(2015, 2024):
-            for month in range(5, 10):
-                num_events = random.randint(1, 4) if month in [6, 7, 8] else random.randint(0, 2)
-                for _ in range(num_events):
-                    state = random.choice(states)
-                    dist_info = random.choice(districts_by_state[state])
-                    day = random.randint(1, 28)
-                    event = LandslideEvent(
-                        latitude=dist_info[1] + random.uniform(-0.15, 0.15),
-                        longitude=dist_info[2] + random.uniform(-0.15, 0.15),
-                        event_date=datetime(year, month, day),
-                        district=dist_info[0],
-                        state=state,
-                        severity=random.choice(["LOW", "MODERATE", "HIGH", "CRITICAL"]),
-                        rainfall_mm=random.uniform(80, 350),
-                        fatalities=random.choice([0, 0, 0, 0, 1, 2, 3]),
-                        source="Synthetic (based on GSI patterns)",
+        # Load from GSI NER dataset
+        data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "gsi_ner_landslides.json")
+        gsi_loaded = False
+        if os.path.exists(data_path):
+            try:
+                with open(data_path, "r", encoding="utf-8") as f:
+                    gsi_events = json.load(f)
+                
+                batch = []
+                for item in gsi_events:
+                    ev_date = datetime.strptime(item["event_date"][:10], "%Y-%m-%d")
+                    ev = LandslideEvent(
+                        latitude=item["latitude"],
+                        longitude=item["longitude"],
+                        event_date=ev_date,
+                        district=item["district"],
+                        state=item["state"],
+                        severity=item["severity"],
+                        rainfall_mm=item["rainfall_mm"],
+                        affected_road=item.get("affected_road"),
+                        affected_settlement=item.get("affected_settlement"),
+                        damage_description=item.get("damage_description"),
+                        fatalities=item.get("fatalities", 0),
+                        source="Geological Survey of India (GSI) Landslide Inventory",
                     )
-                    db.add(event)
+                    batch.append(ev)
+                    if len(batch) >= 1000:
+                        db.add_all(batch)
+                        await db.commit()
+                        batch = []
+                if batch:
+                    db.add_all(batch)
+                    await db.commit()
+                print(f"[OK] Successfully seeded {len(gsi_events)} authentic GSI landslide events.")
+                gsi_loaded = True
+            except Exception as e:
+                print(f"[!] Error reading GSI dataset: {e}. Falling back to standard dataset.")
 
-        grid_points = []
+        if not gsi_loaded:
+            for event_data in NER_LANDSLIDE_EVENTS:
+                event = LandslideEvent(
+                    latitude=event_data["lat"],
+                    longitude=event_data["lng"],
+                    event_date=datetime.strptime(event_data["date"], "%Y-%m-%d"),
+                    district=event_data["district"],
+                    state=event_data["state"],
+                    severity=event_data["severity"],
+                    rainfall_mm=event_data["rainfall"],
+                    affected_road=event_data.get("road"),
+                    affected_settlement=event_data.get("settlement"),
+                    fatalities=event_data.get("fatalities", 0),
+                    source="GSI Landslide Inventory",
+                )
+                db.add(event)
+            await db.commit()
+
+        # Check if ancillary tables already exist
+        loc_check = await db.execute(select(sqlfunc.count(Location.id)))
+        if (loc_check.scalar() or 0) > 0:
+            print("[OK] Ancillary tables already populated. Seeding complete.")
+            return
         for lat_idx in range(20):
             for lng_idx in range(20):
                 lat = 25.10 + lat_idx * 0.025

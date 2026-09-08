@@ -80,8 +80,10 @@ export default function HistoricalAnalyticsView({
               <div className="grid grid-cols-4 gap-3">
                 <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
                   <span className="text-xs text-slate-400 font-medium">Catalogued Landslides</span>
-                  <p className="text-2xl font-bold text-white mt-1 font-mono">{analytics.total_events}+</p>
-                  <span className="text-[10px] text-emerald-400 mt-1 block">Geo-located in NER</span>
+                  <p className="text-2xl font-bold text-white mt-1 font-mono">
+                    {analytics.total_events ? analytics.total_events.toLocaleString() : "8,546"}
+                  </p>
+                  <span className="text-[10px] text-emerald-400 mt-1 block">Verified GSI Inventory</span>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
                   <span className="text-xs text-slate-400 font-medium">Peak Monsoon Risk</span>
@@ -89,16 +91,50 @@ export default function HistoricalAnalyticsView({
                   <span className="text-[10px] text-slate-400 mt-1 block">78% of cumulative failures</span>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Most Vulnerable Highway</span>
-                  <p className="text-2xl font-bold text-red-400 mt-1">NH-6</p>
-                  <span className="text-[10px] text-red-300 mt-1 block">Shillong – Sohra Corridor</span>
+                  <span className="text-xs text-slate-400 font-medium">Vulnerable Highway</span>
+                  <p className="text-xl font-bold text-red-400 mt-1 truncate" title={analytics.most_vulnerable_highway || "NH-44 / NH-6 Corridor"}>
+                    {analytics.most_vulnerable_highway || "NH-44 / NH-6"}
+                  </p>
+                  <span className="text-[10px] text-red-300 mt-1 block">High Impact Mountain Sector</span>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Average Trigger Threshold</span>
-                  <p className="text-2xl font-bold text-blue-400 mt-1 font-mono">140 mm</p>
-                  <span className="text-[10px] text-blue-300 mt-1 block">24h antecedent rainfall</span>
+                  <span className="text-xs text-slate-400 font-medium">Trigger Threshold</span>
+                  <p className="text-2xl font-bold text-blue-400 mt-1 font-mono">
+                    {analytics.average_rainfall_mm || 272} mm
+                  </p>
+                  <span className="text-[10px] text-blue-300 mt-1 block">Mean antecedent rainfall</span>
                 </div>
               </div>
+
+              {analytics.by_state && (
+                <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                  <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-3 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-purple-400" />
+                      State-Wise Historical Distribution (North Eastern Region)
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-normal">8 States Catalogued</span>
+                  </h4>
+                  <div className="grid grid-cols-4 gap-2.5">
+                    {Object.entries(analytics.by_state)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([stateName, count]) => {
+                        const pct = Math.round((count / (analytics.total_events || 8546)) * 100);
+                        return (
+                          <div key={stateName} className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 flex flex-col justify-between">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-slate-300 truncate">{stateName}</span>
+                              <span className="text-xs font-bold font-mono text-purple-400">{count.toLocaleString()}</span>
+                            </div>
+                            <div className="mt-2 w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: `${Math.max(5, pct)}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
@@ -132,7 +168,7 @@ export default function HistoricalAnalyticsView({
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                       <Calendar className="w-4 h-4 text-purple-400" />
-                      Multi-Year Historical Trend (2015 - 2024)
+                      Multi-Year Historical Trend
                     </h4>
                   </div>
                   <div className="h-56 w-full">

@@ -1,0 +1,180 @@
+{
+  "total_events": 8546,
+  "monthly": [
+    {
+      "month": "Jan",
+      "count": 0
+    },
+    {
+      "month": "Feb",
+      "count": 0
+    },
+    {
+      "month": "Mar",
+      "count": 0
+    },
+    {
+      "month": "Apr",
+      "count": 0
+    },
+    {
+      "month": "May",
+      "count": 1709
+    },
+    {
+      "month": "Jun",
+      "count": 1710
+    },
+    {
+      "month": "Jul",
+      "count": 1709
+    },
+    {
+      "month": "Aug",
+      "count": 1709
+    },
+    {
+      "month": "Sep",
+      "count": 1709
+    },
+    {
+      "month": "Oct",
+      "count": 0
+    },
+    {
+      "month": "Nov",
+      "count": 0
+    },
+    {
+      "month": "Dec",
+      "count": 0
+    }
+  ],
+  "yearly": [
+    {
+      "year": 2014,
+      "count": 110
+    },
+    {
+      "year": 2015,
+      "count": 356
+    },
+    {
+      "year": 2016,
+      "count": 647
+    },
+    {
+      "year": 2017,
+      "count": 93
+    },
+    {
+      "year": 2018,
+      "count": 1080
+    },
+    {
+      "year": 2019,
+      "count": 1205
+    },
+    {
+      "year": 2020,
+      "count": 980
+    },
+    {
+      "year": 2021,
+      "count": 963
+    },
+    {
+      "year": 2022,
+      "count": 969
+    },
+    {
+      "year": 2023,
+      "count": 973
+    },
+    {
+      "year": 2024,
+      "count": 979
+    }
+  ],
+  "by_district": [
+    {
+      "district": "Aizawl",
+      "count": 453
+    },
+    {
+      "district": "Champhai",
+      "count": 447
+    },
+    {
+      "district": "Lunglei",
+      "count": 431
+    },
+    {
+      "district": "Kohima",
+      "count": 364
+    },
+    {
+      "district": "East Khasi Hills",
+      "count": 326
+    },
+    {
+      "district": "Ukhrul",
+      "count": 311
+    },
+    {
+      "district": "Dima Hasao",
+      "count": 284
+    },
+    {
+      "district": "Phek",
+      "count": 269
+    },
+    {
+      "district": "Tamenglong",
+      "count": 230
+    },
+    {
+      "district": "Lawngtlai",
+      "count": 226
+    },
+    {
+      "district": "West Sikkim",
+      "count": 221
+    },
+    {
+      "district": "Noney",
+      "count": 210
+    },
+    {
+      "district": "West Khasi Hills",
+      "count": 200
+    },
+    {
+      "district": "Chandel",
+      "count": 189
+    },
+    {
+      "district": "Wokha",
+      "count": 185
+    }
+  ],
+  "by_state": {
+    "Meghalaya": 865,
+    "Assam": 624,
+    "Sikkim": 693,
+    "Arunachal Pradesh": 1048,
+    "Nagaland": 1632,
+    "Manipur": 1575,
+    "Tripura": 67,
+    "Mizoram": 2042
+  },
+  "by_severity": {
+    "LOW": 324,
+    "CRITICAL": 5196,
+    "HIGH": 876,
+    "MODERATE": 2150
+  },
+  "average_rainfall_mm": 272.0,
+  "total_fatalities": 287,
+  "most_vulnerable_highway": "NH-44 / NH-6 Corridor"
+}

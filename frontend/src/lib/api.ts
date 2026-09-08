@@ -172,6 +172,10 @@ export interface AnalyticsData {
   yearly: { year: number; count: number }[];
   by_district: { district: string; count: number }[];
   by_severity: Record<string, number>;
+  by_state?: Record<string, number>;
+  average_rainfall_mm?: number;
+  total_fatalities?: number;
+  most_vulnerable_highway?: string;
 }
 
 async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {

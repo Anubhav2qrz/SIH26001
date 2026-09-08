@@ -17,7 +17,8 @@ async def get_history(
     state: Optional[str] = Query(None),
     severity: Optional[str] = Query(None),
     year: Optional[int] = Query(None),
-    limit: int = Query(100, le=500),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(100, le=1000),
 ):
     query = select(LandslideEvent).order_by(LandslideEvent.event_date.desc())
 
@@ -30,7 +31,7 @@ async def get_history(
     if year:
         query = query.where(extract("year", LandslideEvent.event_date) == year)
 
-    query = query.limit(limit)
+    query = query.offset(offset).limit(limit)
     result = await db.execute(query)
     events = result.scalars().all()
 

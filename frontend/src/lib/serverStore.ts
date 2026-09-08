@@ -52,20 +52,22 @@ export interface LandslideHistoryItem {
   source: string;
 }
 
-const HISTORICAL_EVENTS: LandslideHistoryItem[] = [
-  { id: 1, latitude: 25.27, longitude: 91.72, district: "East Khasi Hills", state: "Meghalaya", event_date: "2023-06-15T00:00:00Z", severity: "HIGH", rainfall_mm: 245, affected_road: "NH-6", affected_settlement: "Sohra", fatalities: 2, source: "GSI/ISRO" },
-  { id: 2, latitude: 25.30, longitude: 91.68, district: "East Khasi Hills", state: "Meghalaya", event_date: "2022-07-20T00:00:00Z", severity: "CRITICAL", rainfall_mm: 310, affected_road: "NH-6", affected_settlement: "Mawsynram", fatalities: 5, source: "GSI/ISRO" },
-  { id: 3, latitude: 25.22, longitude: 91.75, district: "East Khasi Hills", state: "Meghalaya", event_date: "2021-08-12T00:00:00Z", severity: "MODERATE", rainfall_mm: 180, affected_road: "SH-5", affected_settlement: "Laitlyngkot", fatalities: 0, source: "GSI/ISRO" },
-  { id: 4, latitude: 25.35, longitude: 91.88, district: "East Khasi Hills", state: "Meghalaya", event_date: "2023-09-05T00:00:00Z", severity: "HIGH", rainfall_mm: 198, affected_road: "SH-5", affected_settlement: "Shillong", fatalities: 1, source: "GSI/ISRO" },
-  { id: 5, latitude: 25.28, longitude: 91.70, district: "East Khasi Hills", state: "Meghalaya", event_date: "2020-07-03T00:00:00Z", severity: "CRITICAL", rainfall_mm: 352, affected_road: "NH-6", affected_settlement: "Sohra", fatalities: 8, source: "GSI/ISRO" },
-  { id: 6, latitude: 25.68, longitude: 93.05, district: "Dima Hasao", state: "Assam", event_date: "2022-05-14T00:00:00Z", severity: "CRITICAL", rainfall_mm: 275, affected_road: "NH-54", affected_settlement: "Haflong", fatalities: 29, source: "GSI/ISRO" },
-  { id: 7, latitude: 23.73, longitude: 92.72, district: "Aizawl", state: "Mizoram", event_date: "2023-06-12T00:00:00Z", severity: "CRITICAL", rainfall_mm: 268, affected_road: "NH-54", affected_settlement: "Aizawl", fatalities: 11, source: "GSI/ISRO" },
-  { id: 8, latitude: 25.10, longitude: 94.20, district: "Senapati", state: "Manipur", event_date: "2023-07-15T00:00:00Z", severity: "CRITICAL", rainfall_mm: 245, affected_road: "NH-2", affected_settlement: "Mao", fatalities: 6, source: "GSI/ISRO" },
-  { id: 9, latitude: 25.67, longitude: 94.12, district: "Kohima", state: "Nagaland", event_date: "2023-07-22T00:00:00Z", severity: "HIGH", rainfall_mm: 178, affected_road: "NH-29", affected_settlement: "Kohima", fatalities: 1, source: "GSI/ISRO" },
-  { id: 10, latitude: 27.33, longitude: 88.62, district: "East Sikkim", state: "Sikkim", event_date: "2023-10-04T00:00:00Z", severity: "CRITICAL", rainfall_mm: 265, affected_road: "NH-10", affected_settlement: "Gangtok", fatalities: 42, source: "GSI/ISRO" },
-  { id: 11, latitude: 27.10, longitude: 93.62, district: "Papum Pare", state: "Arunachal Pradesh", event_date: "2023-06-25T00:00:00Z", severity: "HIGH", rainfall_mm: 225, affected_road: "NH-415", affected_settlement: "Itanagar", fatalities: 3, source: "GSI/ISRO" },
-  { id: 12, latitude: 23.84, longitude: 91.28, district: "West Tripura", state: "Tripura", event_date: "2023-08-08T00:00:00Z", severity: "MODERATE", rainfall_mm: 165, affected_road: "NH-44", affected_settlement: "Agartala", fatalities: 1, source: "GSI/ISRO" },
-];
+import gsiCuratedData from "@/data/gsi_curated_events.json";
+
+const HISTORICAL_EVENTS: LandslideHistoryItem[] = (gsiCuratedData as any[]).map((e) => ({
+  id: e.id,
+  latitude: e.latitude,
+  longitude: e.longitude,
+  event_date: e.event_date,
+  district: e.district,
+  state: e.state,
+  severity: e.severity,
+  rainfall_mm: e.rainfall_mm,
+  affected_road: e.affected_road || undefined,
+  affected_settlement: e.affected_settlement || undefined,
+  fatalities: e.fatalities || 0,
+  source: e.source || "GSI Landslide Inventory",
+}));
 
 const INITIAL_ALERTS: AlertItem[] = [
   {

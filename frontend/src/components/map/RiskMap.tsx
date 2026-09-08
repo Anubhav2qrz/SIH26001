@@ -67,6 +67,18 @@ export default function RiskMap({
   } | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [showGsiLayer, setShowGsiLayer] = useState(true);
+
+  const toggleGsiLayer = () => {
+    if (!map.current) return;
+    const m = map.current;
+    const nextState = !showGsiLayer;
+    setShowGsiLayer(nextState);
+    const vis = nextState ? "visible" : "none";
+    if (m.getLayer("gsi-clusters")) m.setLayoutProperty("gsi-clusters", "visibility", vis);
+    if (m.getLayer("gsi-cluster-count")) m.setLayoutProperty("gsi-cluster-count", "visibility", vis);
+    if (m.getLayer("gsi-points")) m.setLayoutProperty("gsi-points", "visibility", vis);
+  };
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -360,6 +372,168 @@ export default function RiskMap({
       });
     }
 
+    // GSI Landslide Inventory Layer (8,546 NER Records)
+    if (!m.getSource("gsi-landslides")) {
+      m.addSource("gsi-landslides", {
+        type: "geojson",
+        data: "/data/gsi_ner_landslides.geojson",
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 45,
+      });
+
+      m.addLayer({
+        id: "gsi-clusters",
+        type: "circle",
+        source: "gsi-landslides",
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": [
+            "step",
+            ["get", "point_count"],
+            "#818cf8",
+            50,
+            "#a855f7",
+            200,
+            "#c084fc",
+            500,
+            "#ec4899",
+          ],
+          "circle-radius": [
+            "step",
+            ["get", "point_count"],
+            16,
+            50,
+            22,
+            200,
+            28,
+            500,
+            34,
+          ],
+          "circle-opacity": 0.85,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#ffffff",
+        },
+      });
+
+      m.addLayer({
+        id: "gsi-cluster-count",
+        type: "symbol",
+        source: "gsi-landslides",
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": "{point_count_abbreviated}",
+          "text-font": ["Open Sans Bold"],
+          "text-size": 11,
+        },
+        paint: {
+          "text-color": "#ffffff",
+        },
+      });
+
+      m.addLayer({
+        id: "gsi-points",
+        type: "circle",
+        source: "gsi-landslides",
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": [
+            "match",
+            ["get", "severity"],
+            "CRITICAL", "#ef4444",
+            "HIGH", "#f97316",
+            "MODERATE", "#eab308",
+            "#22c55e",
+          ],
+          "circle-radius": 5.5,
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": "#ffffff",
+          "circle-opacity": 0.9,
+        },
+      });
+
+      m.on("click", "gsi-clusters", async (e) => {
+        const features = m.queryRenderedFeatures(e.point, { layers: ["gsi-clusters"] });
+        const clusterId = features[0]?.properties?.cluster_id;
+        const source = m.getSource("gsi-landslides") as maplibregl.GeoJSONSource;
+        if (source && clusterId != null) {
+          try {
+            const zoom = await source.getClusterExpansionZoom(clusterId);
+            const coords = (features[0].geometry as GeoJSON.Point).coordinates;
+            m.easeTo({
+              center: [coords[0], coords[1]],
+              zoom: zoom || 11,
+            });
+          } catch {
+            // fallback
+          }
+        }
+      });
+
+      m.on("click", "gsi-points", (e) => {
+        if (!e.features?.[0]) return;
+        const f = e.features[0];
+        const props = f.properties || {};
+        const coords = (f.geometry as GeoJSON.Point).coordinates.slice();
+
+        new maplibregl.Popup({ offset: 12 })
+          .setLngLat(coords as [number, number])
+          .setHTML(
+            `<div style="font-family: ui-sans-serif, system-ui, sans-serif; font-size: 11px; line-height: 1.4; color: #0f172a; min-width: 220px; padding: 4px;">
+              <div style="font-weight: 700; font-size: 13px; color: #7c3aed; margin-bottom: 2px;">
+                ${props.name || "GSI Landslide Incident"}
+              </div>
+              <div style="font-size: 10px; color: #64748b; font-family: monospace; margin-bottom: 6px;">
+                ${props.slide_no || "GSI-NER-RECORD"}
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <span style="color: #475569;">State / District:</span>
+                <span style="font-weight: 600;">${props.state}, ${props.district}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <span style="color: #475569;">Recorded Year:</span>
+                <span style="font-weight: 600;">${props.year || "Historical"}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <span style="color: #475569;">Severity Rating:</span>
+                <span style="font-weight: 700; color: ${props.severity === "CRITICAL" ? "#dc2626" : props.severity === "HIGH" ? "#ea580c" : "#ca8a04"};">${props.severity}</span>
+              </div>
+              ${props.rainfall ? `
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <span style="color: #475569;">Trigger Rainfall:</span>
+                <span style="font-weight: 600; color: #0284c7;">${props.rainfall} mm</span>
+              </div>` : ""}
+              ${props.road ? `
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <span style="color: #475569;">Highway / Road:</span>
+                <span style="font-weight: 600; color: #b91c1c;">${props.road}</span>
+              </div>` : ""}
+              ${props.geology ? `
+              <div style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1; font-size: 10px; color: #334155;">
+                <strong>Geology:</strong> ${props.geology}
+              </div>` : ""}
+              ${props.fatalities > 0 ? `
+              <div style="margin-top: 4px; font-weight: 700; color: #dc2626;">
+                Recorded Fatalities: ${props.fatalities}
+              </div>` : ""}
+              <div style="margin-top: 6px; font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">
+                Source: Geological Survey of India (GSI)
+              </div>
+            </div>`
+          )
+          .addTo(m);
+      });
+
+      for (const l of ["gsi-clusters", "gsi-points"]) {
+        m.on("mouseenter", l, () => {
+          m.getCanvas().style.cursor = "pointer";
+        });
+        m.on("mouseleave", l, () => {
+          m.getCanvas().style.cursor = "";
+        });
+      }
+    }
+
     m.on("click", "risk-circles", (e) => {
       if (e.features?.[0]) {
         const coords = (e.features[0].geometry as GeoJSON.Point).coordinates;
@@ -454,7 +628,7 @@ export default function RiskMap({
 
     m.on("click", (e) => {
       const features = m.queryRenderedFeatures(e.point, {
-        layers: ["risk-circles", "alert-markers", "report-markers"],
+        layers: ["risk-circles", "alert-markers", "report-markers", "gsi-points", "gsi-clusters"],
       });
       if (features.length === 0) {
         onMapClick(e.lngLat.lat, e.lngLat.lng);
@@ -543,6 +717,25 @@ export default function RiskMap({
                   )}
                 </button>
               ))}
+              <div className="border-t border-slate-700/80 my-1 pt-1">
+                <span className="text-[10px] text-slate-400 uppercase font-bold px-2 py-1 block">
+                  GIS Catalogs
+                </span>
+                <button
+                  onClick={toggleGsiLayer}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors ${
+                    showGsiLayer
+                      ? "bg-purple-600/30 text-purple-300 border border-purple-500/40"
+                      : "text-slate-400 hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-400" />
+                    GSI Inventory (8.5k)
+                  </span>
+                  <span className="text-[10px] font-mono text-purple-300">{showGsiLayer ? "ON" : "OFF"}</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -596,6 +789,10 @@ export default function RiskMap({
               <span className="text-[10px] text-slate-300 font-medium">{item.label}</span>
             </div>
           ))}
+          <div className="flex items-center gap-1.5 pl-2 sm:pl-3 border-l border-slate-700">
+            <div className="w-2.5 h-2.5 rounded-full bg-purple-500 ring-2 ring-purple-400/30" />
+            <span className="text-[10px] text-purple-300 font-semibold">GSI Recorded Landslides</span>
+          </div>
         </div>
       </div>
 
