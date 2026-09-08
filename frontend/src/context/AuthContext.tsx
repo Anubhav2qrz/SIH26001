@@ -175,6 +175,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       provider: "google",
       options: {
         redirectTo: typeof window !== "undefined" ? `${window.location.origin}/` : undefined,
+        queryParams: {
+          prompt: "select_account",
+          access_type: "offline",
+        },
       },
     });
 
