@@ -97,7 +97,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
       <div className="relative w-full max-w-md bg-[#0f172a] border border-slate-700/60 rounded-2xl shadow-2xl overflow-hidden">
-        {/* Modal Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/50">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
@@ -120,7 +119,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </button>
         </div>
 
-        {/* Navigation Tabs */}
         {user ? (
           <div className="flex border-b border-slate-800 bg-slate-950/40 p-1">
             <button
@@ -179,7 +177,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </div>
         )}
 
-        {/* Modal Body */}
         <div className="p-5 space-y-4">
           {errorMsg && (
             <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
@@ -195,7 +192,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
           )}
 
-          {/* Mode 1: Logged-in User Profile Card */}
           {user && mode === "profile" ? (
             <div className="space-y-4">
               <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3.5 shadow-inner">
@@ -242,7 +238,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </button>
             </div>
           ) : mode === "switch_role" ? (
-            /* Mode 2: Role Switcher */
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
@@ -362,7 +357,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               )}
             </div>
           ) : (
-            /* Mode 3: Supabase Email Login / Sign Up */
             <form onSubmit={handleSubmit} className="space-y-3.5">
               {mode === "signup" && (
                 <div>

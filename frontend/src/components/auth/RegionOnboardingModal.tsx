@@ -29,7 +29,6 @@ export default function RegionOnboardingModal({
 }: RegionOnboardingModalProps) {
   const { user, profile, updateRegion, setRole } = useAuth();
 
-  // Default to Meghalaya -> East Khasi Hills (primary SIH demo region)
   const [selectedStateId, setSelectedStateId] = useState<string>("meghalaya");
   const [selectedDistrictName, setSelectedDistrictName] = useState<string>("East Khasi Hills");
   const [selectedRole, setSelectedRole] = useState<AppRole>(profile?.role || "CITIZEN");
@@ -85,11 +84,9 @@ export default function RegionOnboardingModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in">
       <div className="relative w-full max-w-xl bg-gradient-to-b from-[#0e1626] to-[#0a0f1d] border border-blue-500/30 rounded-2xl sm:rounded-3xl shadow-2xl shadow-blue-950/50 overflow-hidden text-slate-200">
-        {/* Glow ambient background highlights */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Modal Header */}
         <div className="relative p-5 sm:p-6 pb-4 border-b border-slate-800/80 bg-slate-900/40">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 ring-1 ring-white/20">
@@ -112,9 +109,7 @@ export default function RegionOnboardingModal({
           </div>
         </div>
 
-        {/* Modal Content */}
         <div className="p-5 sm:p-6 space-y-5 max-h-[75vh] overflow-y-auto">
-          {/* Step 1: North Eastern States selector */}
           <div>
             <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
               <Layers className="w-3.5 h-3.5 text-blue-400" />
@@ -152,7 +147,6 @@ export default function RegionOnboardingModal({
             </div>
           </div>
 
-          {/* Step 2: District Selection */}
           <div>
             <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
               <MapPin className="w-3.5 h-3.5 text-emerald-400" />
@@ -189,7 +183,6 @@ export default function RegionOnboardingModal({
             </div>
           </div>
 
-          {/* District Spatial Brief Card */}
           <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/90 space-y-2">
             <div className="flex items-center justify-between text-xs border-b border-slate-800/80 pb-2">
               <div className="flex items-center gap-1.5 font-bold text-white">
@@ -212,7 +205,6 @@ export default function RegionOnboardingModal({
             </div>
           </div>
 
-          {/* Step 3: Operational Role */}
           <div>
             <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5 mb-2.5">
               <Shield className="w-3.5 h-3.5 text-purple-400" />
@@ -245,7 +237,6 @@ export default function RegionOnboardingModal({
           </div>
         </div>
 
-        {/* Modal Actions */}
         <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-900/60 flex items-center justify-between gap-3">
           {onClose && (
             <button

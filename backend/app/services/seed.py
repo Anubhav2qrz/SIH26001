@@ -108,7 +108,6 @@ async def seed_database():
             await db.execute(delete(LandslideEvent))
             await db.commit()
 
-        # Load from GSI NER dataset
         data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "gsi_ner_landslides.json")
         gsi_loaded = False
         if os.path.exists(data_path):
@@ -164,7 +163,6 @@ async def seed_database():
                 db.add(event)
             await db.commit()
 
-        # Check if ancillary tables already exist
         loc_check = await db.execute(select(sqlfunc.count(Location.id)))
         if (loc_check.scalar() or 0) > 0:
             print("[OK] Ancillary tables already populated. Seeding complete.")

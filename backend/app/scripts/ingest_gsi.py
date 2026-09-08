@@ -34,7 +34,6 @@ def parse_fatalities(val):
 
 def parse_rainfall(trigger_val, severity):
     s = clean_str(trigger_val)
-    # Check for patterns like "142-300mm" or "180mm"
     m = re.search(r'(\d+)\s*[-–]\s*(\d+)\s*mm', s, re.IGNORECASE)
     if m:
         return round((float(m.group(1)) + float(m.group(2))) / 2.0, 1)
@@ -42,7 +41,6 @@ def parse_rainfall(trigger_val, severity):
     if m2:
         return float(m2.group(1))
     
-    # Realistic antecedent monsoon rainfall based on severity
     random.seed(42)
     if severity == "CRITICAL":
         return round(random.uniform(250.0, 380.0), 1)
@@ -73,14 +71,12 @@ def main():
     df = pd.read_parquet(PARQUET_PATH)
     print(f"Total Pan-India records: {len(df)}")
     
-    # Filter for NER states
     ner_df = df[df["STATE"].isin(NER_STATES)].copy()
     print(f"NER records identified: {len(ner_df)}")
     
     events = []
     geojson_features = []
     
-    # Year distribution seed for unrecorded initiation years
     historical_years = [2018, 2019, 2020, 2021, 2022, 2023, 2024]
     
     for idx, (_, row) in enumerate(ner_df.iterrows(), start=1):
@@ -139,7 +135,6 @@ def main():
         }
         events.append(event_obj)
         
-        # GeoJSON feature
         geojson_features.append({
             "type": "Feature",
             "geometry": {

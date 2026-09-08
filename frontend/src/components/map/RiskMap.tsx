@@ -118,7 +118,6 @@ export default function RiskMap({
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    // Direct MapLibre to use our bundled web worker script in public directory
     maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
 
     const m = new maplibregl.Map({
@@ -437,7 +436,6 @@ export default function RiskMap({
       });
     }
 
-    // GSI Landslide Inventory Layer (8,546 NER Records)
     if (!m.getSource("gsi-landslides")) {
       m.addSource("gsi-landslides", {
         type: "geojson",
@@ -529,9 +527,7 @@ export default function RiskMap({
               center: [coords[0], coords[1]],
               zoom: zoom || 11,
             });
-          } catch {
-            // fallback
-          }
+          } catch {}
         }
       });
 
@@ -829,7 +825,6 @@ export default function RiskMap({
           )}
         </div>
 
-        {/* Quick 1-Click Basemap Toggle */}
         <button
           onClick={() => switchBasemap(currentBasemap === "dark" ? "satellite" : "dark")}
           className="h-9 px-2.5 rounded-xl bg-slate-900/90 backdrop-blur border border-slate-700/80 hover:bg-slate-800 text-xs font-semibold text-slate-200 flex items-center gap-1.5 shadow-lg transition-all"

@@ -445,7 +445,6 @@ export default function Dashboard() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-[#0a0e1a]">
-      {/* App Header */}
       <header className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-5 border-b border-slate-800/80 bg-[#0c1222]/95 backdrop-blur-xl z-40 shrink-0">
         <div className="flex items-center gap-2.5 sm:gap-3.5">
           <div className="flex items-center gap-2">
@@ -481,7 +480,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Desktop Header Actions */}
         <div className="hidden md:flex items-center gap-2">
           <button
             onClick={() => setIsSitrepOpen(true)}
@@ -518,7 +516,6 @@ export default function Dashboard() {
             <span>+ Report Incident</span>
           </button>
 
-          {/* Active Region Switcher */}
           <button
             onClick={() => setIsRegionModalOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:border-blue-500/50 hover:bg-blue-500/10 transition-all text-left group shadow-sm"
@@ -566,7 +563,6 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Mobile Header Actions */}
         <div className="flex md:hidden items-center gap-2">
           <button
             onClick={() => setIsReportOpen(true)}
@@ -585,7 +581,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Mobile Top Menu Drawer */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-slate-900/95 backdrop-blur-xl border-b border-slate-800 p-4 space-y-3 z-50 animate-slide-in-up">
           <div className="flex items-center justify-between p-2 rounded-xl bg-slate-950/80 border border-slate-800">
@@ -662,9 +657,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Main Workspace */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Desktop Sidebar */}
         <aside className="hidden md:flex w-72 lg:w-80 sidebar flex-col shrink-0 overflow-y-auto border-r border-slate-800">
           <div className="flex border-b border-slate-800 bg-slate-950/40">
             {(
@@ -694,7 +687,6 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        {/* Map / Primary Visualization Container */}
         <main className="flex-1 relative w-full h-full">
           {loading ? (
             <div className="w-full h-full flex items-center justify-center bg-[#0d1320]">
@@ -717,7 +709,6 @@ export default function Dashboard() {
           )}
         </main>
 
-        {/* Mobile Sliding Bottom Sheet for Overview / Alerts / Reports */}
         {mobileTab !== "map" && (
           <div className="md:hidden fixed inset-x-0 bottom-14 max-h-[70vh] bg-[#0d1320]/95 backdrop-blur-2xl border-t border-slate-700/80 rounded-t-2xl shadow-2xl overflow-y-auto z-40 animate-slide-in-up">
             <div className="sticky top-0 z-10 bg-[#0d1320]/95 backdrop-blur-xl border-b border-slate-800/80 px-4 py-2.5 flex items-center justify-between">
@@ -741,7 +732,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
       <nav className="md:hidden h-14 bg-[#0c1222]/98 backdrop-blur-xl border-t border-slate-800/80 grid grid-cols-4 items-center z-40 shrink-0">
         {[
           { key: "map" as const, icon: MapIcon, label: "Map" },
@@ -770,7 +760,6 @@ export default function Dashboard() {
         })}
       </nav>
 
-      {/* Modals & AI Copilot */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
       <RegionOnboardingModal
         isOpen={isRegionModalOpen}

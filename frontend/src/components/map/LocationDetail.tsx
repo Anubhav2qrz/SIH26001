@@ -156,7 +156,6 @@ export default function LocationDetail({ data, activeReport, onReportIncident, o
         </div>
 
         <div className="p-4 space-y-4">
-          {/* Ground Field Report Card if present */}
           {activeReport && (
             <section className="p-3.5 rounded-xl bg-orange-950/30 border border-orange-500/40 space-y-2.5 shadow-lg shadow-orange-500/5">
               <div className="flex items-center justify-between">
