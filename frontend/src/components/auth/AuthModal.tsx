@@ -220,8 +220,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </div>
 
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Jurisdiction / District</span>
-                  <span className="text-slate-200 font-medium">{profile.district || "East Khasi Hills, Meghalaya"}</span>
+                  <span className="text-slate-400">Jurisdiction / Region</span>
+                  <span className="text-slate-200 font-medium">
+                    {profile.district || "East Khasi Hills"}, {profile.state || "Meghalaya"}
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-between text-xs">

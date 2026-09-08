@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   Bot,
+  Compass,
 } from "lucide-react";
 import {
   getDashboardKPIs as getKPIs,
@@ -39,6 +40,7 @@ import MultilingualAlertModal from "@/components/alerts/MultilingualAlertModal";
 import HistoricalAnalyticsView from "@/components/analytics/HistoricalAnalyticsView";
 import SitrepModal from "@/components/sitrep/SitrepModal";
 import DisasterCopilot from "@/components/copilot/DisasterCopilot";
+import RegionOnboardingModal from "@/components/auth/RegionOnboardingModal";
 
 const RiskMap = dynamic(() => import("@/components/map/RiskMap"), {
   ssr: false,
@@ -118,7 +120,7 @@ function KPICard({
 }
 
 export default function Dashboard() {
-  const { profile } = useAuth();
+  const { profile, needsRegionSelection } = useAuth();
   const [kpis, setKpis] = useState<KPIData | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [reports, setReports] = useState<FieldReport[]>([]);
@@ -127,16 +129,35 @@ export default function Dashboard() {
     lat: number;
     lng: number;
   } | null>(null);
+  const [flyToLocation, setFlyToLocation] = useState<{
+    lat: number;
+    lng: number;
+    zoom?: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidePanel, setSidePanel] = useState<"kpi" | "alerts" | "reports">("kpi");
   const [mobileTab, setMobileTab] = useState<"map" | "kpi" | "alerts" | "reports">("map");
   const [isDemo, setIsDemo] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isRegionModalOpen, setIsRegionModalOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isAlertDispatchOpen, setIsAlertDispatchOpen] = useState(false);
   const [isSitrepOpen, setIsSitrepOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (needsRegionSelection) {
+      setIsRegionModalOpen(true);
+    }
+  }, [needsRegionSelection]);
+
+  const handleRegionSelected = useCallback(
+    (state: string, district: string, coords: { lat: number; lng: number; zoom: number }) => {
+      setFlyToLocation({ lat: coords.lat, lng: coords.lng, zoom: coords.zoom });
+    },
+    []
+  );
 
   const fetchData = useCallback(async () => {
     try {
@@ -497,6 +518,25 @@ export default function Dashboard() {
             <span>+ Report Incident</span>
           </button>
 
+          {/* Active Region Switcher */}
+          <button
+            onClick={() => setIsRegionModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:border-blue-500/50 hover:bg-blue-500/10 transition-all text-left group shadow-sm"
+            title="Switch Operational State & District"
+          >
+            <div className="p-1 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:scale-110 transition-transform">
+              <Compass className="w-3.5 h-3.5" />
+            </div>
+            <div className="leading-tight">
+              <span className="text-xs font-bold text-slate-200 block truncate max-w-[130px]">
+                {profile.district || "East Khasi Hills"}
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium block">
+                {profile.state || "Meghalaya"}
+              </span>
+            </div>
+          </button>
+
           <button
             onClick={() => setIsDemo(!isDemo)}
             className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all ${
@@ -669,6 +709,7 @@ export default function Dashboard() {
               alerts={alerts}
               reports={reports}
               selectedLocation={selectedLocation}
+              flyToLocation={flyToLocation}
               onMapClick={handleMapClick}
               onRefresh={fetchData}
               onAddIncident={handleAddIncident}
@@ -731,6 +772,11 @@ export default function Dashboard() {
 
       {/* Modals & AI Copilot */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <RegionOnboardingModal
+        isOpen={isRegionModalOpen}
+        onClose={() => setIsRegionModalOpen(false)}
+        onRegionSelected={handleRegionSelected}
+      />
       <FieldReportModal
         isOpen={isReportOpen}
         onClose={() => setIsReportOpen(false)}

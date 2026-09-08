@@ -24,6 +24,7 @@ interface RiskMapProps {
   alerts: Alert[];
   reports: FieldReport[];
   selectedLocation: { lat: number; lng: number } | null;
+  flyToLocation?: { lat: number; lng: number; zoom?: number } | null;
   onMapClick: (lat: number, lng: number) => void;
   onRefresh: () => void;
   onAddIncident?: (coords?: { lat: number; lng: number }) => void;
@@ -52,6 +53,7 @@ export default function RiskMap({
   alerts,
   reports,
   selectedLocation,
+  flyToLocation,
   onMapClick,
   onRefresh,
   onAddIncident,
@@ -79,6 +81,16 @@ export default function RiskMap({
       map.current.getCanvas().style.cursor = isPinMode ? "crosshair" : "";
     }
   }, [isPinMode]);
+
+  useEffect(() => {
+    if (!map.current || !flyToLocation) return;
+    map.current.flyTo({
+      center: [flyToLocation.lng, flyToLocation.lat],
+      zoom: flyToLocation.zoom || 9.8,
+      essential: true,
+      duration: 2200,
+    });
+  }, [flyToLocation]);
 
   const toggleGsiLayer = () => {
     if (!map.current) return;

@@ -11,8 +11,10 @@ export interface UserProfile {
   email: string;
   name: string;
   role: AppRole;
+  state?: string;
   district?: string;
   department?: string;
+  has_selected_region?: boolean;
 }
 
 interface AuthContextType {
@@ -21,6 +23,9 @@ interface AuthContextType {
   profile: UserProfile;
   loading: boolean;
   isConfigured: boolean;
+  needsRegionSelection: boolean;
+  setNeedsRegionSelection: (val: boolean) => void;
+  updateRegion: (state: string, district: string) => Promise<{ error: Error | null }>;
   setRole: (role: AppRole) => void;
   switchDemoUser: (role: AppRole) => void;
   signInWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -71,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile>(DEMO_PROFILES.AUTHORITY);
   const [loading, setLoading] = useState(true);
+  const [needsRegionSelection, setNeedsRegionSelection] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -83,13 +89,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         const metadata = session.user.user_metadata || {};
+        const hasRegion = Boolean(metadata.has_selected_region);
         setProfile({
           id: session.user.id,
           email: session.user.email || "",
           name: metadata.name || session.user.email?.split("@")[0] || "Officer",
           role: (metadata.role as AppRole) || "CITIZEN",
+          state: metadata.state || "Meghalaya",
           district: metadata.district || "East Khasi Hills",
+          has_selected_region: hasRegion,
         });
+        if (!hasRegion) {
+          setNeedsRegionSelection(true);
+        }
       }
       setLoading(false);
     });
@@ -101,13 +113,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         const metadata = session.user.user_metadata || {};
+        const hasRegion = Boolean(metadata.has_selected_region);
         setProfile({
           id: session.user.id,
           email: session.user.email || "",
           name: metadata.name || session.user.email?.split("@")[0] || "Officer",
           role: (metadata.role as AppRole) || "CITIZEN",
+          state: metadata.state || "Meghalaya",
           district: metadata.district || "East Khasi Hills",
+          has_selected_region: hasRegion,
         });
+        if (!hasRegion) {
+          setNeedsRegionSelection(true);
+        }
       }
       setLoading(false);
     });
@@ -193,12 +211,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   };
 
+  const updateRegion = async (state: string, district: string) => {
+    if (isSupabaseConfigured && user) {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          state,
+          district,
+          has_selected_region: true,
+        },
+      });
+      if (error) {
+        return { error: new Error(error.message) };
+      }
+    }
+
+    setProfile((prev) => ({
+      ...prev,
+      state,
+      district,
+      has_selected_region: true,
+    }));
+    setNeedsRegionSelection(false);
+    return { error: null };
+  };
+
   const signOut = async () => {
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
     }
     setUser(null);
     setSession(null);
+    setNeedsRegionSelection(false);
     setProfile(DEMO_PROFILES.CITIZEN);
   };
 
@@ -210,6 +253,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile,
         loading,
         isConfigured: isSupabaseConfigured,
+        needsRegionSelection,
+        setNeedsRegionSelection,
+        updateRegion,
         setRole,
         switchDemoUser,
         signInWithEmail,
