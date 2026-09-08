@@ -25,6 +25,7 @@ interface AuthContextType {
   switchDemoUser: (role: AppRole) => void;
   signInWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUpWithEmail: (email: string, password: string, name: string, role: AppRole) => Promise<{ error: Error | null }>;
+  signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -164,6 +165,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error ? new Error(error.message) : null };
   };
 
+  const signInWithGoogle = async () => {
+    if (!isSupabaseConfigured) {
+      switchDemoUser("CITIZEN");
+      return { error: null };
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: typeof window !== "undefined" ? `${window.location.origin}/` : undefined,
+      },
+    });
+    return { error: error ? new Error(error.message) : null };
+  };
+
   const signOut = async () => {
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
@@ -185,6 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         switchDemoUser,
         signInWithEmail,
         signUpWithEmail,
+        signInWithGoogle,
         signOut,
       }}
     >
