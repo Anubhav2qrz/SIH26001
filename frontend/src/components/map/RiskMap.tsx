@@ -30,20 +30,12 @@ interface RiskMapProps {
   onAddIncident?: (coords?: { lat: number; lng: number }) => void;
 }
 
-type BasemapStyle = "voyager" | "dark" | "satellite" | "topo";
-
-const CARTO_API_KEY =
-  process.env.NEXT_PUBLIC_CARTO_API_KEY || "cb1_31yi_1_4a140fda7b4dd7d5fe46f34a";
+type BasemapStyle = "dark" | "satellite" | "topo" | "osm";
 
 const BASEMAP_TILES: Record<
   BasemapStyle,
   { base: string; ref?: string; name: string; attribution: string }
 > = {
-  voyager: {
-    base: `https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png?api_key=${CARTO_API_KEY}`,
-    name: "CARTO Voyager (Clean Street Style)",
-    attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
-  },
   dark: {
     base: "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
     ref: "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
@@ -61,6 +53,11 @@ const BASEMAP_TILES: Record<
     name: "Topographic Terrain",
     attribution: "ESRI Topo &copy; USGS",
   },
+  osm: {
+    base: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    name: "OpenStreetMap (Clean Street View)",
+    attribution: "&copy; OpenStreetMap contributors",
+  },
 };
 
 export default function RiskMap({
@@ -76,7 +73,7 @@ export default function RiskMap({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [currentBasemap, setCurrentBasemap] = useState<BasemapStyle>("voyager");
+  const [currentBasemap, setCurrentBasemap] = useState<BasemapStyle>("dark");
   const [showBasemapMenu, setShowBasemapMenu] = useState(false);
   const [isPinMode, setIsPinMode] = useState(false);
   const isPinModeRef = useRef(false);
@@ -132,9 +129,14 @@ export default function RiskMap({
         sources: {
           "esri-base": {
             type: "raster",
-            tiles: [BASEMAP_TILES.voyager.base],
+            tiles: [BASEMAP_TILES.dark.base],
             tileSize: 256,
-            attribution: BASEMAP_TILES.voyager.attribution,
+            attribution: BASEMAP_TILES.dark.attribution,
+          },
+          "esri-ref": {
+            type: "raster",
+            tiles: [BASEMAP_TILES.dark.ref!],
+            tileSize: 256,
           },
         },
         layers: [
@@ -142,6 +144,13 @@ export default function RiskMap({
             id: "esri-base-layer",
             type: "raster",
             source: "esri-base",
+            minzoom: 0,
+            maxzoom: 19,
+          },
+          {
+            id: "esri-ref-layer",
+            type: "raster",
+            source: "esri-ref",
             minzoom: 0,
             maxzoom: 19,
           },
@@ -773,10 +782,10 @@ export default function RiskMap({
               </span>
               {(
                 [
-                  { key: "voyager", label: "🗺️ CARTO Voyager", desc: "Clean Street & Highway" },
-                  { key: "dark", label: "🌑 Cyber Dark Mode", desc: "Night Command Center" },
-                  { key: "satellite", label: "🛰️ Satellite Hybrid", desc: "Photorealistic Mountains" },
-                  { key: "topo", label: "⛰️ Topographic Relief", desc: "Elevation Contours" },
+                  { key: "dark", label: "🌑 Cyber Dark Mode", desc: "Night Command Center (Default)" },
+                  { key: "satellite", label: "🛰️ Satellite Hybrid", desc: "Photorealistic Mountains & Roads" },
+                  { key: "topo", label: "⛰️ Topographic Relief", desc: "Elevation Contours & Terrain" },
+                  { key: "osm", label: "🗺️ OpenStreetMap", desc: "Standard Free Street View" },
                 ] as const
               ).map((item) => (
                 <button
@@ -822,11 +831,11 @@ export default function RiskMap({
 
         {/* Quick 1-Click Basemap Toggle */}
         <button
-          onClick={() => switchBasemap(currentBasemap === "voyager" ? "dark" : "voyager")}
+          onClick={() => switchBasemap(currentBasemap === "dark" ? "satellite" : "dark")}
           className="h-9 px-2.5 rounded-xl bg-slate-900/90 backdrop-blur border border-slate-700/80 hover:bg-slate-800 text-xs font-semibold text-slate-200 flex items-center gap-1.5 shadow-lg transition-all"
-          title={`Switch to ${currentBasemap === "voyager" ? "Cyber Dark Mode" : "CARTO Voyager"}`}
+          title={`Switch to ${currentBasemap === "dark" ? "Satellite Hybrid HD" : "Cyber Dark Mode"}`}
         >
-          <span>{currentBasemap === "voyager" ? "🌑 Dark" : "🗺️ Voyager"}</span>
+          <span>{currentBasemap === "dark" ? "🛰️ Satellite" : "🌑 Dark"}</span>
         </button>
 
         <button
