@@ -30,21 +30,36 @@ interface RiskMapProps {
   onAddIncident?: (coords?: { lat: number; lng: number }) => void;
 }
 
-type BasemapStyle = "dark" | "satellite" | "topo";
+type BasemapStyle = "voyager" | "dark" | "satellite" | "topo";
 
-const BASEMAP_TILES: Record<BasemapStyle, { base: string; ref?: string; name: string }> = {
+const CARTO_API_KEY =
+  process.env.NEXT_PUBLIC_CARTO_API_KEY || "cb1_31yi_1_4a140fda7b4dd7d5fe46f34a";
+
+const BASEMAP_TILES: Record<
+  BasemapStyle,
+  { base: string; ref?: string; name: string; attribution: string }
+> = {
+  voyager: {
+    base: `https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png?api_key=${CARTO_API_KEY}`,
+    name: "CARTO Voyager (Clean Street Style)",
+    attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+  },
   dark: {
     base: "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
     ref: "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
-    name: "Dark Canvas",
+    name: "Cyber Dark Canvas",
+    attribution: "ESRI &copy; USGS, NOAA",
   },
   satellite: {
     base: "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    name: "Satellite HD",
+    ref: "https://services.arcgisonline.com/arcgis/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+    name: "Satellite Hybrid HD",
+    attribution: "ESRI &copy; DigitalGlobe, USGS",
   },
   topo: {
     base: "https://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
     name: "Topographic Terrain",
+    attribution: "ESRI Topo &copy; USGS",
   },
 };
 
@@ -61,7 +76,7 @@ export default function RiskMap({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [currentBasemap, setCurrentBasemap] = useState<BasemapStyle>("dark");
+  const [currentBasemap, setCurrentBasemap] = useState<BasemapStyle>("voyager");
   const [showBasemapMenu, setShowBasemapMenu] = useState(false);
   const [isPinMode, setIsPinMode] = useState(false);
   const isPinModeRef = useRef(false);
@@ -117,14 +132,9 @@ export default function RiskMap({
         sources: {
           "esri-base": {
             type: "raster",
-            tiles: [BASEMAP_TILES.dark.base],
+            tiles: [BASEMAP_TILES.voyager.base],
             tileSize: 256,
-            attribution: "ESRI &copy; USGS, NOAA",
-          },
-          "esri-ref": {
-            type: "raster",
-            tiles: [BASEMAP_TILES.dark.ref!],
-            tileSize: 256,
+            attribution: BASEMAP_TILES.voyager.attribution,
           },
         },
         layers: [
@@ -132,13 +142,6 @@ export default function RiskMap({
             id: "esri-base-layer",
             type: "raster",
             source: "esri-base",
-            minzoom: 0,
-            maxzoom: 19,
-          },
-          {
-            id: "esri-ref-layer",
-            type: "raster",
-            source: "esri-ref",
             minzoom: 0,
             maxzoom: 19,
           },
@@ -173,20 +176,24 @@ export default function RiskMap({
 
     const sourceConfig = BASEMAP_TILES[styleKey];
 
-    if (m.getSource("esri-base")) {
-      if (m.getLayer("esri-base-layer")) m.removeLayer("esri-base-layer");
-      if (m.getLayer("esri-ref-layer")) m.removeLayer("esri-ref-layer");
-      if (m.getSource("esri-base")) m.removeSource("esri-base");
-      if (m.getSource("esri-ref")) m.removeSource("esri-ref");
-    }
+    if (m.getLayer("esri-ref-layer")) m.removeLayer("esri-ref-layer");
+    if (m.getLayer("esri-base-layer")) m.removeLayer("esri-base-layer");
+    if (m.getSource("esri-ref")) m.removeSource("esri-ref");
+    if (m.getSource("esri-base")) m.removeSource("esri-base");
 
     m.addSource("esri-base", {
       type: "raster",
       tiles: [sourceConfig.base],
       tileSize: 256,
+      attribution: sourceConfig.attribution,
     });
 
-    const firstRiskLayer = m.getLayer("risk-heatmap") ? "risk-heatmap" : undefined;
+    const firstRiskLayer = m.getLayer("risk-heatmap")
+      ? "risk-heatmap"
+      : m.getLayer("risk-circles")
+      ? "risk-circles"
+      : undefined;
+
     m.addLayer(
       {
         id: "esri-base-layer",
@@ -760,15 +767,16 @@ export default function RiskMap({
           </button>
 
           {showBasemapMenu && (
-            <div className="absolute top-0 right-11 w-44 bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl p-1.5 space-y-1 z-20">
+            <div className="absolute top-0 right-11 w-52 bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl p-1.5 space-y-1 z-20">
               <span className="text-[10px] text-slate-400 uppercase font-bold px-2 py-1 block">
-                Basemap Layer
+                Basemap Style
               </span>
               {(
                 [
-                  { key: "dark", label: "🌑 Dark Canvas" },
-                  { key: "satellite", label: "🛰️ Satellite HD" },
-                  { key: "topo", label: "⛰️ Topographic" },
+                  { key: "voyager", label: "🗺️ CARTO Voyager", desc: "Clean Street & Highway" },
+                  { key: "dark", label: "🌑 Cyber Dark Mode", desc: "Night Command Center" },
+                  { key: "satellite", label: "🛰️ Satellite Hybrid", desc: "Photorealistic Mountains" },
+                  { key: "topo", label: "⛰️ Topographic Relief", desc: "Elevation Contours" },
                 ] as const
               ).map((item) => (
                 <button
@@ -780,9 +788,12 @@ export default function RiskMap({
                       : "text-slate-300 hover:bg-slate-800"
                   }`}
                 >
-                  <span>{item.label}</span>
+                  <div className="flex flex-col">
+                    <span>{item.label}</span>
+                    <span className="text-[9px] text-slate-400 font-normal">{item.desc}</span>
+                  </div>
                   {currentBasemap === item.key && (
-                    <span className="w-2 h-2 rounded-full bg-blue-400" />
+                    <span className="w-2 h-2 rounded-full bg-blue-400 shadow-sm" />
                   )}
                 </button>
               ))}
@@ -808,6 +819,15 @@ export default function RiskMap({
             </div>
           )}
         </div>
+
+        {/* Quick 1-Click Basemap Toggle */}
+        <button
+          onClick={() => switchBasemap(currentBasemap === "voyager" ? "dark" : "voyager")}
+          className="h-9 px-2.5 rounded-xl bg-slate-900/90 backdrop-blur border border-slate-700/80 hover:bg-slate-800 text-xs font-semibold text-slate-200 flex items-center gap-1.5 shadow-lg transition-all"
+          title={`Switch to ${currentBasemap === "voyager" ? "Cyber Dark Mode" : "CARTO Voyager"}`}
+        >
+          <span>{currentBasemap === "voyager" ? "🌑 Dark" : "🗺️ Voyager"}</span>
+        </button>
 
         <button
           onClick={() => setIsPinMode(!isPinMode)}
