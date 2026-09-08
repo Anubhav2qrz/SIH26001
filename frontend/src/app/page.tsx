@@ -163,10 +163,15 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  const handleMapClick = (lat: number, lng: number) => {
+  const handleMapClick = useCallback((lat: number, lng: number) => {
     setSelectedLocation({ lat, lng });
     setMobileTab("map");
-  };
+  }, []);
+
+  const handleAddIncident = useCallback((coords?: { lat: number; lng: number }) => {
+    if (coords) setSelectedLocation(coords);
+    setIsReportOpen(true);
+  }, []);
 
   const renderSidebarContent = () => (
     <div className="p-4 space-y-3.5">
@@ -666,10 +671,7 @@ export default function Dashboard() {
               selectedLocation={selectedLocation}
               onMapClick={handleMapClick}
               onRefresh={fetchData}
-              onAddIncident={(coords) => {
-                if (coords) setSelectedLocation(coords);
-                setIsReportOpen(true);
-              }}
+              onAddIncident={handleAddIncident}
             />
           )}
         </main>

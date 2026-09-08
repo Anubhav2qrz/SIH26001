@@ -94,6 +94,9 @@ export default function RiskMap({
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
+    // Direct MapLibre to use our bundled web worker script in public directory
+    maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+
     const m = new maplibregl.Map({
       container: mapContainer.current,
       style: {
@@ -268,14 +271,15 @@ export default function RiskMap({
         id: "risk-circles",
         type: "circle",
         source: "risk-grid",
-        minzoom: 8.5,
         paint: {
           "circle-radius": [
             "interpolate",
             ["linear"],
             ["zoom"],
-            8.5, 4,
-            14, 12,
+            5, 3.5,
+            7, 5.5,
+            10, 8.5,
+            14, 14,
           ],
           "circle-color": [
             "interpolate",
@@ -456,7 +460,7 @@ export default function RiskMap({
         filter: ["has", "point_count"],
         layout: {
           "text-field": "{point_count_abbreviated}",
-          "text-font": ["Open Sans Bold"],
+          "text-font": ["Noto Sans Bold"],
           "text-size": 11,
         },
         paint: {
