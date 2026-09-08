@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { X, Shield, User, Lock, Mail, Check, AlertCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Shield, User, Lock, Mail, Check, AlertCircle, LogOut, CheckCircle2 } from "lucide-react";
 import { useAuth, AppRole } from "@/context/AuthContext";
 
 interface AuthModalProps {
@@ -10,8 +10,8 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const { profile, switchDemoUser, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
-  const [mode, setMode] = useState<"switch_role" | "login" | "signup">("switch_role");
+  const { user, profile, switchDemoUser, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut } = useAuth();
+  const [mode, setMode] = useState<"profile" | "switch_role" | "login" | "signup">(user ? "profile" : "switch_role");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -20,6 +20,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      setMode("profile");
+    }
+  }, [user]);
 
   if (!isOpen) return null;
 
@@ -39,11 +45,28 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   const handleRoleSelect = (role: AppRole) => {
     switchDemoUser(role);
-    setSuccessMsg(`Switched to ${role.replace("_", " ")} profile`);
+    setSuccessMsg(`Switched to ${role.replace("_", " ")} persona`);
     setTimeout(() => {
       onClose();
       setSuccessMsg("");
     }, 400);
+  };
+
+  const handleSignOut = async () => {
+    setLoading(true);
+    setErrorMsg("");
+    try {
+      await signOut();
+      setSuccessMsg("Signed out successfully");
+      setTimeout(() => {
+        setMode("switch_role");
+        setSuccessMsg("");
+        setLoading(false);
+      }, 500);
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Sign out failed");
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,6 +97,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
       <div className="relative w-full max-w-md bg-[#0f172a] border border-slate-700/60 rounded-2xl shadow-2xl overflow-hidden">
+        {/* Modal Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/50">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
@@ -81,10 +105,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
             <div>
               <h3 className="font-bold text-white tracking-wide">
-                LANDGUARD NER Authentication
+                {user ? "Your Profile & Active Session" : "LANDGUARD NER Authentication"}
               </h3>
               <p className="text-xs text-slate-400">
-                Supabase Auth & RBAC
+                {user ? "Authenticated via Google / Supabase" : "Supabase Auth & RBAC"}
               </p>
             </div>
           </div>
@@ -96,39 +120,66 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </button>
         </div>
 
-        <div className="flex border-b border-slate-800 bg-slate-950/40 p-1">
-          <button
-            onClick={() => setMode("switch_role")}
-            className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
-              mode === "switch_role"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Quick Role Switcher
-          </button>
-          <button
-            onClick={() => setMode("login")}
-            className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
-              mode === "login"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Supabase Login
-          </button>
-          <button
-            onClick={() => setMode("signup")}
-            className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
-              mode === "signup"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
+        {/* Navigation Tabs */}
+        {user ? (
+          <div className="flex border-b border-slate-800 bg-slate-950/40 p-1">
+            <button
+              onClick={() => setMode("profile")}
+              className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
+                mode === "profile"
+                  ? "bg-blue-600 text-white shadow-sm font-semibold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              My Account
+            </button>
+            <button
+              onClick={() => setMode("switch_role")}
+              className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
+                mode === "switch_role"
+                  ? "bg-blue-600 text-white shadow-sm font-semibold"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Simulate Role Persona
+            </button>
+          </div>
+        ) : (
+          <div className="flex border-b border-slate-800 bg-slate-950/40 p-1">
+            <button
+              onClick={() => setMode("switch_role")}
+              className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
+                mode === "switch_role"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Quick Role Switcher
+            </button>
+            <button
+              onClick={() => setMode("login")}
+              className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
+                mode === "login"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Supabase Login
+            </button>
+            <button
+              onClick={() => setMode("signup")}
+              className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
+                mode === "signup"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+        )}
 
+        {/* Modal Body */}
         <div className="p-5 space-y-4">
           {errorMsg && (
             <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
@@ -144,11 +195,56 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
           )}
 
-          {mode === "switch_role" ? (
+          {/* Mode 1: Logged-in User Profile Card */}
+          {user && mode === "profile" ? (
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3.5 shadow-inner">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-blue-500/20 ring-2 ring-blue-400/30">
+                    {profile.name ? profile.name[0].toUpperCase() : "U"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-white truncate">{profile.name}</h4>
+                    <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-semibold mt-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                      <CheckCircle2 className="w-3 h-3" /> Signed in via Google
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Assigned RBAC Role</span>
+                  <span className="font-bold px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30 font-mono">
+                    {profile.role}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Jurisdiction / District</span>
+                  <span className="text-slate-200 font-medium">{profile.district || "East Khasi Hills, Meghalaya"}</span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">Session ID</span>
+                  <span className="text-slate-500 font-mono text-[10px] truncate max-w-[160px]">{user.id}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleSignOut}
+                disabled={loading}
+                className="w-full py-2.5 px-4 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 hover:border-red-500/50 text-red-300 text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>{loading ? "Signing out..." : "Sign Out of Account"}</span>
+              </button>
+            </div>
+          ) : mode === "switch_role" ? (
+            /* Mode 2: Role Switcher */
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                  Select User Persona
+                  {user ? "Simulate Persona For SIH Judging" : "Select User Persona"}
                 </span>
                 <span className="text-[10px] text-blue-400 font-medium">
                   One-Click
@@ -198,55 +294,73 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   >
                     <div className="space-y-1 pr-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white">
+                        <span className="text-xs font-bold text-white">
                           {item.title}
                         </span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${item.badge}`}>
+                        <span
+                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${item.badge}`}
+                        >
                           {item.role}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-300 font-medium">
+                      <p className="text-[11px] text-slate-300 font-medium">
                         {item.name}
                       </p>
-                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                      <p className="text-[10px] text-slate-400 leading-relaxed">
                         {item.desc}
                       </p>
                     </div>
-                    {isActive && (
-                      <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0 mt-1">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    )}
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-1 transition-colors ${
+                        isActive
+                          ? "border-blue-500 bg-blue-500 text-white"
+                          : "border-slate-700"
+                      }`}
+                    >
+                      {isActive && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                    </div>
                   </button>
                 );
               })}
 
-              <div className="pt-2">
-                <div className="relative my-3">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-800" />
+              {!user && (
+                <div className="pt-2">
+                  <div className="relative my-3">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-800" />
+                    </div>
+                    <div className="relative flex justify-center text-[10px] uppercase">
+                      <span className="bg-[#0f172a] px-2 text-slate-500 font-medium">Or continue with</span>
+                    </div>
                   </div>
-                  <div className="relative flex justify-center text-[10px] uppercase">
-                    <span className="bg-[#0f172a] px-2 text-slate-500 font-medium">Or continue with</span>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={loading || googleLoading}
+                    className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:bg-slate-800 hover:border-slate-600 text-slate-200 text-xs font-semibold transition-all shadow-sm disabled:opacity-50"
+                  >
+                    {googleLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                        <span>Redirecting to Google...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                        </svg>
+                        <span>Continue with Google</span>
+                      </>
+                    )}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:bg-slate-800 hover:border-slate-600 text-slate-200 text-xs font-semibold transition-all shadow-sm disabled:opacity-50"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                  </svg>
-                  <span>Continue with Google</span>
-                </button>
-              </div>
+              )}
             </div>
           ) : (
+            /* Mode 3: Supabase Email Login / Sign Up */
             <form onSubmit={handleSubmit} className="space-y-3.5">
               {mode === "signup" && (
                 <div>
