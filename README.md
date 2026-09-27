@@ -297,6 +297,7 @@ g:\SIH26001
 │
 ├── docs/                               # High-resolution workflow diagrams and assets
 ├── netlify.toml                        # Production build configuration & environment
+├── HOW_IT_WORKS.md                     # Complete working guide: pipeline, accuracy, benchmarks
 ├── PROJECT_WALKTHROUGH.md              # In-depth technical architecture document
 └── README.md                           # Main repository showcase
 ```
